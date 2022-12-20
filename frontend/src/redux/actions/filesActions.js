@@ -1,38 +1,13 @@
 import axios from 'axios';
-
-export async function fetchFiles(dispatch) {
-  try {
+import store from '../store';
+export function fetchFiles() {
+  return async function (dispatch) {
     const response = await axios.get('http://localhost:4000/api/files');
-    if (response.status === 200) {
-      const files = response.data;
-      dispatch({
-        type: 'SET_FILES',
-        payload: files,
-      });
-    }
-  } catch (e) {
-    console.log(e);
-  }
-}
-export function removeFile(dispatch, file) {
-  try {
-    const response = axios.post(`http://localhost:4000/api/removeFile`, {
-      file: {
-        path: file.path,
-        type: file.type,
-      },
-    });
-    if (response.status === 200) {
-      fetchFiles(dispatch);
-      const removeStatus = response.body.statusSuccesse;
-      const message = response.body.message;
-    }
-  } catch (error) {
-    console.log(error);
-  }
+    return dispatch({ type: 'SET_FILES', payload: response.data });
+  };
 }
 
-export async function addFile(dispatch, file) {
+export async function addFile(file) {
   try {
     const formData = new FormData();
 
@@ -42,22 +17,35 @@ export async function addFile(dispatch, file) {
       formData.append('pathArray', filePath);
     }
     await axios.post(`http://localhost:4000/api/files`, formData, {});
-    fetchFiles(dispatch);
   } catch (e) {
     console.log(e);
   }
 }
-export function selectFile(file, dispatch) {
-  if (file) {
-    dispatch({
-      type: 'SELECT_FILE',
-      payload: file,
+export async function removeFile(file) {
+  try {
+    const response = axios.post(`http://localhost:4000/api/removeFile`, {
+      file: {
+        path: file.path,
+        type: file.type,
+      },
     });
+    if (response.status === 200) {
+    }
+  } catch (error) {
+    console.log(error);
   }
 }
-export function returnFile(dispatch) {
-  dispatch({
-    type: 'RETURN_FILE',
-    payload: null,
-  });
+
+export function undoFile(file) {
+  if (file) {
+    return {
+      type: 'UNDO_FILE',
+      payload: file,
+    };
+  }
+}
+export function redoFile() {
+  return {
+    type: 'REDO_FILE',
+  };
 }

@@ -1,7 +1,7 @@
 const initialState = {
   files: [],
-  selectedFile: [],
-  previousFilesStack: [],
+  selectedFile: {},
+  fileStack: [],
   totalSize: 0,
 };
 const filesReducer = (state = initialState, action) => {
@@ -11,38 +11,35 @@ const filesReducer = (state = initialState, action) => {
         ...state,
         files: action.payload,
         selectedFile: action.payload,
-        previousFilesStack: [action.payload],
+        fileStack: [action.payload],
         totalSize: action.payload.size,
       };
-    case 'SELECT_FILE':
-      const newStack = state.previousFilesStack;
-      newStack.push(action.payload);
-
-      return {
-        ...state,
-        previousFilesStack: newStack,
-        selectedFile: action.payload,
-      };
-    case 'RETURN_FILE':
-      if (state.previousFilesStack.length > 1) {
-        const stack = state.previousFilesStack;
-        stack.pop();
+    case 'UNDO_FILE':
+      if (!action.payload.children && !action.payload.children.length > 0) {
         return {
           ...state,
-          selectedFile: stack[stack.length - 1],
-          previousFilesStack: stack,
         };
       }
-    case 'DELETE_FILE':
-    // if (2) {
-    //   const stack = state.previousFilesStack;
-    //   stack.pop();
-    //   return {
-    //     ...state,
-    //     selectedFile: stack[stack.length - 1],
-    //     previousFilesStack: stack,
-    //   };
-    // }
+      const undoStack = state.fileStack;
+      undoStack.push(action.payload);
+      return {
+        ...state,
+        fileStack: undoStack,
+        selectedFile: action.payload,
+      };
+    case 'REDO_FILE':
+      if (state.fileStack.length < 2) {
+        return {
+          ...state,
+        };
+      }
+      const redoStack = state.fileStack;
+      redoStack.pop();
+      return {
+        ...state,
+        selectedFile: redoStack[redoStack.length - 1],
+        fileStack: redoStack,
+      };
 
     default:
       return state;

@@ -19,7 +19,7 @@ export const FileContextMenu = ({ openFile, file, anchorEl, open, handleCloseCon
     { id: 4, name: 'Показать свойства', icon: <Info /> },
     { id: 5, name: 'Переименовать', icon: <DriveFileRenameOutline /> },
   ];
-  console.log(file);
+
   return (
     <Menu id="lock-menu" anchorEl={anchorEl} open={open} onClose={handleCloseContextMenu}>
       {contextMenuOptions.map((item, index) => (

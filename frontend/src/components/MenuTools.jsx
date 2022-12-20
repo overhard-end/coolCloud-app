@@ -12,9 +12,9 @@ import {
 } from '@mui/material';
 import React from 'react';
 import { connect } from 'react-redux';
-import { addFile, fetchFiles } from '../redux/actions/filesActions';
+import { addFile } from '../redux/actions/filesActions';
 
-const MenuTools = ({ addFileHandler, anchorEl, openMenu, handleClose }) => {
+const MenuTools = ({ dispatch, anchorEl, openMenu, handleClose }) => {
   const [open, setOpen] = React.useState(false);
   const [text, setText] = React.useState(false);
   const [textValidation, setTextValidation] = React.useState(false);
@@ -40,12 +40,6 @@ const MenuTools = ({ addFileHandler, anchorEl, openMenu, handleClose }) => {
     } else {
       setTextValidation(true);
     }
-  }
-
-  function uploadSelectFile(e) {
-    const file = e.target.files;
-
-    addFileHandler(file);
   }
 
   return (
@@ -86,7 +80,7 @@ const MenuTools = ({ addFileHandler, anchorEl, openMenu, handleClose }) => {
         <MenuItem variant="contained" component="label">
           <input
             id="filesInput"
-            onChange={(e) => uploadSelectFile(e)}
+            onChange={(e) => dispatch(addFile(e.target.files))}
             onClick={(e) => (e.target.value = '')}
             hidden
             accept="file/*"
@@ -99,7 +93,7 @@ const MenuTools = ({ addFileHandler, anchorEl, openMenu, handleClose }) => {
         <MenuItem variant="contained" component="label">
           <input
             id="dirInput"
-            onChange={(e) => uploadSelectFile(e)}
+            onChange={(e) => dispatch(addFile(e.target.files[0]))}
             onClick={(e) => (e.target.value = '')}
             hidden
             webkitdirectory="true"
@@ -116,13 +110,7 @@ const MenuTools = ({ addFileHandler, anchorEl, openMenu, handleClose }) => {
 };
 function mapDispatchToProps(dispatch) {
   return {
-    addFileHandler: (file) => {
-      console.log(file);
-      addFile(dispatch, file);
-    },
-    fetchFilesHandler: () => {
-      fetchFiles(dispatch);
-    },
+    dispatch: dispatch,
   };
 }
 

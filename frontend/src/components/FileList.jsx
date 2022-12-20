@@ -15,36 +15,13 @@ import {
 import React, { useEffect } from 'react';
 import { FileItem } from './FileItem';
 import { connect } from 'react-redux';
-import { fetchFiles, selectFile, returnFile } from '../redux/actions/filesActions';
-import img1 from '../img/12.jpg';
-
-const FileList = ({ files, dispatch, selectedFile, fileStack, totalSizeByte }) => {
-  function openFile(file) {
-    if (file.children && file.children.length > 0) {
-      selectFile(file, dispatch);
-    }
-  }
-
+import { fetchFiles, redoFile } from '../redux/actions/filesActions';
+import { formatSizeUnits } from '../utils/sizeFormat';
+const FileList = ({ dispatch, selectedFile, fileStack, totalSizeByte }) => {
   useEffect(() => {
-    fetchFiles(dispatch);
+    dispatch(fetchFiles());
   }, [dispatch]);
 
-  function formatSizeUnits(bytes) {
-    if (bytes >= 1073741824) {
-      bytes = (bytes / 1073741824).toFixed(2) + ' GB';
-    } else if (bytes >= 1048576) {
-      bytes = (bytes / 1048576).toFixed(2) + ' MB';
-    } else if (bytes >= 1024) {
-      bytes = (bytes / 1024).toFixed(2) + ' KB';
-    } else if (bytes > 1) {
-      bytes = bytes + ' bytes';
-    } else if (bytes === 1) {
-      bytes = bytes + ' byte';
-    } else {
-      bytes = '0 bytes';
-    }
-    return bytes;
-  }
   const size = formatSizeUnits(totalSizeByte);
 
   const selectFilePath = (fileStack) => {
@@ -66,16 +43,6 @@ const FileList = ({ files, dispatch, selectedFile, fileStack, totalSizeByte }) =
         paddingTop: '100px',
         minWidth: '390px',
       }}>
-      <iframe
-        sandbox="allow-scripts"
-        referrerPolicy="origin"
-        loading="eager  "
-        id="inlineFrameExample"
-        title="Inline Frame Example"
-        width=""
-        height="200"
-        src={img1}></iframe>
-
       <Box sx={{ display: 'flex', justifyContent: 'center' }}>
         <Box sx={{}}>
           <LinearProgress variant="determinate" value={progressSize} />
@@ -90,7 +57,7 @@ const FileList = ({ files, dispatch, selectedFile, fileStack, totalSizeByte }) =
           justifyContent: 'space-between',
         }}>
         <Box sx={{ width: '100%' }}>
-          <ListItemButton onClick={() => returnFile(dispatch)} sx={{ width: '150px' }}>
+          <ListItemButton onClick={() => dispatch(redoFile())} sx={{ width: '150px' }}>
             <SubdirectoryArrowLeft />
             <Typography
               sx={{
@@ -141,8 +108,7 @@ const FileList = ({ files, dispatch, selectedFile, fileStack, totalSizeByte }) =
                   formatSizeUnits={formatSizeUnits}
                   file={file}
                   key={file.name}
-                  openFile={openFile}
-                  returnFile={returnFile}
+                  dispatch={dispatch}
                 />
               ))
             : ''}
@@ -156,7 +122,7 @@ const mapStateToProps = (state) => ({
   totalSizeByte: state.folderReducer.totalSize,
   files: state.folderReducer.files,
   selectedFile: state.folderReducer.selectedFile,
-  fileStack: state.folderReducer.previousFilesStack,
+  fileStack: state.folderReducer.fileStack,
 });
 
 const mapDispatchToProps = (dispatch) => ({ dispatch });

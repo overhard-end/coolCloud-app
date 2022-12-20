@@ -16,8 +16,9 @@ import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import { IconButton, ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
 import React from 'react';
 import { FileContextMenu } from './FileContextMenu';
+import { undoFile, redoFile } from '../redux/actions/filesActions';
 
-export const FileItem = ({ file, openFile, formatSizeUnits }) => {
+export const FileItem = ({ file, formatSizeUnits, dispatch }) => {
   const fileIcon = (file) => {
     switch (file.extension) {
       case '.pdf':
@@ -78,7 +79,7 @@ export const FileItem = ({ file, openFile, formatSizeUnits }) => {
   return (
     <>
       <ListItemButton
-        onClick={() => openFile(file)}
+        onClick={() => dispatch(undoFile(file))}
         onContextMenu={(e) => handleOpenContextMenu(e)}
         disableGutters={true}
         disablePadding={true}
@@ -116,7 +117,6 @@ export const FileItem = ({ file, openFile, formatSizeUnits }) => {
         anchorEl={anchorEl}
         handleCloseContextMenu={handleCloseContextMenu}
         open={open}
-        openFile={openFile}
         file={file}
       />
     </>
