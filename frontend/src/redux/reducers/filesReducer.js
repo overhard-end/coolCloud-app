@@ -4,7 +4,7 @@ const initialState = {
   previousFilesStack: [],
   totalSize: 0,
 };
-const folderReducer = (state = initialState, action) => {
+const filesReducer = (state = initialState, action) => {
   switch (action.type) {
     case 'SET_FILES':
       return {
@@ -33,10 +33,20 @@ const folderReducer = (state = initialState, action) => {
           previousFilesStack: stack,
         };
       }
+    case 'DELETE_FILE':
+    // if (2) {
+    //   const stack = state.previousFilesStack;
+    //   stack.pop();
+    //   return {
+    //     ...state,
+    //     selectedFile: stack[stack.length - 1],
+    //     previousFilesStack: stack,
+    //   };
+    // }
 
     default:
       return state;
   }
 };
 
-export default folderReducer;
+export default filesReducer;

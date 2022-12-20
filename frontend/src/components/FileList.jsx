@@ -15,8 +15,9 @@ import {
 import React, { useEffect } from 'react';
 import { FileItem } from './FileItem';
 import { connect } from 'react-redux';
-import { fetchFiles, selectFile, returnFile } from '../redux/actions/actions';
+import { fetchFiles, selectFile, returnFile } from '../redux/actions/filesActions';
 import img1 from '../img/12.jpg';
+
 const FileList = ({ files, dispatch, selectedFile, fileStack, totalSizeByte }) => {
   function openFile(file) {
     if (file.children && file.children.length > 0) {

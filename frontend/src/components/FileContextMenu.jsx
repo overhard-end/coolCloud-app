@@ -8,7 +8,7 @@ import {
 } from '@mui/icons-material';
 import { Menu, MenuItem, Typography } from '@mui/material';
 import React from 'react';
-import { removeFile } from '../redux/actions/actions';
+import { removeFile } from '../redux/actions/filesActions';
 
 export const FileContextMenu = ({ openFile, file, anchorEl, open, handleCloseContextMenu }) => {
   const contextMenuOptions = [

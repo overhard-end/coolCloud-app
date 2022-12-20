@@ -2,7 +2,6 @@ import axios from 'axios';
 
 export async function fetchFiles(dispatch) {
   try {
-    console.log(process.env.SERVER_URL);
     const response = await axios.get('http://localhost:4000/api/files');
     if (response.status === 200) {
       const files = response.data;
@@ -15,7 +14,7 @@ export async function fetchFiles(dispatch) {
     console.log(e);
   }
 }
-export function removeFile(file) {
+export function removeFile(dispatch, file) {
   try {
     const response = axios.post(`http://localhost:4000/api/removeFile`, {
       file: {
@@ -24,6 +23,7 @@ export function removeFile(file) {
       },
     });
     if (response.status === 200) {
+      fetchFiles(dispatch);
       const removeStatus = response.body.statusSuccesse;
       const message = response.body.message;
     }

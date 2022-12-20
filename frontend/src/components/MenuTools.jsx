@@ -12,7 +12,7 @@ import {
 } from '@mui/material';
 import React from 'react';
 import { connect } from 'react-redux';
-import { addFile, fetchFiles } from '../redux/actions/actions';
+import { addFile, fetchFiles } from '../redux/actions/filesActions';
 
 const MenuTools = ({ addFileHandler, anchorEl, openMenu, handleClose }) => {
   const [open, setOpen] = React.useState(false);

@@ -13,7 +13,7 @@ import {
   TextSnippet,
 } from '@mui/icons-material';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import { IconButton, ListItem, ListItemIcon, ListItemText } from '@mui/material';
+import { IconButton, ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
 import React from 'react';
 import { FileContextMenu } from './FileContextMenu';
 
@@ -77,14 +77,13 @@ export const FileItem = ({ file, openFile, formatSizeUnits }) => {
 
   return (
     <>
-      <ListItem
+      <ListItemButton
         onClick={() => openFile(file)}
         onContextMenu={(e) => handleOpenContextMenu(e)}
         disableGutters={true}
         disablePadding={true}
         divider={true}
         dense={true}
-        button={true}
         sx={{ marginRight: '70px' }}
         secondaryAction={<IconButton aria-label="delete"></IconButton>}>
         <ListItemIcon>{fileIcon(file)}</ListItemIcon>
@@ -111,7 +110,7 @@ export const FileItem = ({ file, openFile, formatSizeUnits }) => {
           sx={{ padding: '0 10px', display: 'flex', justifyContent: 'right' }}
           secondary={fileSize}
         />
-      </ListItem>
+      </ListItemButton>
 
       <FileContextMenu
         anchorEl={anchorEl}
