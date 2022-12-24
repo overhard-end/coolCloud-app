@@ -81,7 +81,7 @@ const MenuTools = ({ dispatch, anchorEl, openMenu, handleClose }) => {
           <input
             id="filesInput"
             onChange={(e) => dispatch(addFile(e.target.files))}
-            onClick={(e) => (e.target.value = '')}
+            onClick={(e) => (e.target.value = null)}
             hidden
             accept="file/*"
             multiple
@@ -93,8 +93,8 @@ const MenuTools = ({ dispatch, anchorEl, openMenu, handleClose }) => {
         <MenuItem variant="contained" component="label">
           <input
             id="dirInput"
-            onChange={(e) => dispatch(addFile(e.target.files[0]))}
-            onClick={(e) => (e.target.value = '')}
+            onChange={(e) => dispatch(addFile(e.target.files))}
+            onClick={(e) => (e.target.value = null)}
             hidden
             webkitdirectory="true"
             directory="true"

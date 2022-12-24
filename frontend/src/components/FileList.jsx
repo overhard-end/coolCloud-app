@@ -17,22 +17,17 @@ import { FileItem } from './FileItem';
 import { connect } from 'react-redux';
 import { fetchFiles, redoFile } from '../redux/actions/filesActions';
 import { formatSizeUnits } from '../utils/sizeFormat';
-const FileList = ({ dispatch, selectedFile, fileStack, totalSizeByte }) => {
+
+
+const FileList = ({pathStack, dispatch, selectedFile, totalSizeByte }) => {
   useEffect(() => {
     dispatch(fetchFiles());
   }, [dispatch]);
 
+
   const size = formatSizeUnits(totalSizeByte);
 
-  const selectFilePath = (fileStack) => {
-    return fileStack[fileStack.length - 1];
-  };
-  const selectFilePathSplit = selectFilePath(fileStack);
-  const pap = selectFilePathSplit?.path.split('/');
-  if (pap) {
-    pap[0] = 'root';
-  }
-
+ 
   const maxSize = 1;
   const tatalSizeGB = totalSizeByte / 1073741824;
   const progressSize = (tatalSizeGB / maxSize) * 100;
@@ -69,8 +64,8 @@ const FileList = ({ dispatch, selectedFile, fileStack, totalSizeByte }) => {
           </ListItemButton>
 
           <List sx={{ display: 'inline-block' }}>
-            {pap
-              ? pap.map((path, index) => (
+            {pathStack
+              ? pathStack.map((path, index) => (
                   <Box key={index} sx={{ display: 'inline-block' }}>
                     <>
                       <ListItemButton
@@ -79,7 +74,7 @@ const FileList = ({ dispatch, selectedFile, fileStack, totalSizeByte }) => {
                           padding: 0,
                           color: 'grey',
                         }}>
-                        <Typography variant="caption"> {path} /</Typography>
+                        <Typography variant="caption"> {path} </Typography>
                       </ListItemButton>
                     </>
                   </Box>
@@ -87,7 +82,7 @@ const FileList = ({ dispatch, selectedFile, fileStack, totalSizeByte }) => {
               : ''}
           </List>
 
-          <ListItem disableGutters={true} disablePadding={true}>
+          <ListItem disableGutters={true} >
             <ListItemIcon>
               <ArrowDownward />
             </ListItemIcon>
@@ -101,13 +96,14 @@ const FileList = ({ dispatch, selectedFile, fileStack, totalSizeByte }) => {
 
       <Grid item xs={12} md={6}>
         <List>
+          
           {selectedFile.children
-            ? selectedFile.children.map((file) => (
+            ? selectedFile.children.map((file,index) => (
                 <FileItem
                   id="fileItem"
                   formatSizeUnits={formatSizeUnits}
                   file={file}
-                  key={file.name}
+                  key={index}
                   dispatch={dispatch}
                 />
               ))
@@ -123,6 +119,7 @@ const mapStateToProps = (state) => ({
   files: state.folderReducer.files,
   selectedFile: state.folderReducer.selectedFile,
   fileStack: state.folderReducer.fileStack,
+  pathStack:state.folderReducer.pathStack
 });
 
 const mapDispatchToProps = (dispatch) => ({ dispatch });

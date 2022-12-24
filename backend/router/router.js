@@ -7,8 +7,9 @@ const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
 
 const multerUploadsSet = upload.fields([
-  { name: 'file', maxCount: 100 },
-  { name: 'pathArray', maxCount: 100 },
+  { name: 'files', maxCount: 100 },
+  { name: 'relativePath',maxCount:100 }
+  
 ]);
 
 router.get('/files', filesController.sendFiles);

@@ -1,7 +1,8 @@
 const initialState = {
-  files: [],
-  selectedFile: {},
+  files: {},
+  selectedFile: [],
   fileStack: [],
+  pathStack:['/Disk'],
   totalSize: 0,
 };
 const filesReducer = (state = initialState, action) => {
@@ -15,30 +16,35 @@ const filesReducer = (state = initialState, action) => {
         totalSize: action.payload.size,
       };
     case 'UNDO_FILE':
-      if (!action.payload.children && !action.payload.children.length > 0) {
-        return {
-          ...state,
-        };
+      if (!action.payload.children) {
+        return state
       }
+
       const undoStack = state.fileStack;
       undoStack.push(action.payload);
+      const newPathStack = state.pathStack;
+      newPathStack.push(action.payload?.path)
       return {
         ...state,
         fileStack: undoStack,
         selectedFile: action.payload,
+        pathStack:newPathStack
       };
     case 'REDO_FILE':
       if (state.fileStack.length < 2) {
-        return {
-          ...state,
-        };
+        return state
       }
+        
+      
       const redoStack = state.fileStack;
       redoStack.pop();
+      const decPathStack = state.pathStack;
+      decPathStack.pop()
       return {
         ...state,
         selectedFile: redoStack[redoStack.length - 1],
         fileStack: redoStack,
+        pathStack:decPathStack
       };
 
     default:

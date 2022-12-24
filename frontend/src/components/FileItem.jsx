@@ -82,11 +82,11 @@ export const FileItem = ({ file, formatSizeUnits, dispatch }) => {
         onClick={() => dispatch(undoFile(file))}
         onContextMenu={(e) => handleOpenContextMenu(e)}
         disableGutters={true}
-        disablePadding={true}
+        
         divider={true}
         dense={true}
         sx={{ marginRight: '70px' }}
-        secondaryAction={<IconButton aria-label="delete"></IconButton>}>
+        >
         <ListItemIcon>{fileIcon(file)}</ListItemIcon>
         <ListItemText
           primary={file.name}

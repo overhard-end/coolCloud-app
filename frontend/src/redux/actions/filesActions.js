@@ -1,26 +1,43 @@
+
 import axios from 'axios';
 import store from '../store';
+const folderState = store.getState().folderReducer
 export function fetchFiles() {
-  return async function (dispatch) {
-    const response = await axios.get('http://localhost:4000/api/files');
-    return dispatch({ type: 'SET_FILES', payload: response.data });
+  return async (dispatch) => {
+    try {
+      const response = await axios.get('http://localhost:4000/api/files');
+      return dispatch({ type: 'SET_FILES', payload: response.data });
+
+    } catch (error) {
+      console.log(error)
+    }
+    
   };
 }
 
-export async function addFile(file) {
-  try {
-    const formData = new FormData();
-
-    for (let i = 0; i < file.length; i++) {
-      const filePath = file[i].webkitRelativePath;
-      formData.append('file', file[i]);
-      formData.append('pathArray', filePath);
+export  function addFile(files) {
+  return async (dispatch)=>{
+    const formData = new FormData()
+      console.log(folderState)
+      for(let i = 0; i < files.length; i++){
+        let relativePath = files[i].webkitRelativePath
+        if(!relativePath){
+          relativePath =  `/${files[i].name}`
+        }
+        formData.append('files',files[i])
+        formData.append('relativePath',relativePath)
+        
+      }
+      const response = await axios.post('http://localhost:4000/api/files',formData)
+      if(response.status === 200) {
+        return dispatch(fetchFiles())
+      }
+     
+      
     }
-    await axios.post(`http://localhost:4000/api/files`, formData, {});
-  } catch (e) {
-    console.log(e);
   }
-}
+ 
+
 export async function removeFile(file) {
   try {
     const response = axios.post(`http://localhost:4000/api/removeFile`, {

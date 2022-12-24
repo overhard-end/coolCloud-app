@@ -1,11 +1,11 @@
 const path = require('path');
 const fs = require('fs');
-var qs = require('querystring');
 const dirTree = require('directory-tree'); //library for get files structure from directory
+
 
 class FilesController {
   async sendFiles(req, res, next) {
-    const uploadsPath = path.join(__dirname, '../uploads/rootDisk');
+    const uploadsPath = path.join(__dirname, '../uploads/root');
     const files = dirTree(
       uploadsPath,
       {
@@ -14,45 +14,57 @@ class FilesController {
       },
       null,
       (item, path, stats) => {
-        let newPath = path.split('rootDisk').pop();
+        let newPath = path.split('root').pop();
         item.path = newPath;
         for (let i = 0; i < item.children.length; i++) {
-          let newPath = item.children[i].path.split('rootDisk').pop();
+          let newPath = item.children[i].path.split('root').pop();
           item.children[i].path = newPath;
         }
       },
     );
-
+          if(!files){
+         return res.json('No such of files yet')
+       }
     res.json(files);
-    next();
+    
   }
 
   async saveFiles(req, res, next) {
-    const uploadsPath = path.join(__dirname, '../uploads/rootDisk');
-    const body = req.body;
-    const files = req.files;
+    try {
+      const destinationPath = path.join(__dirname, '../uploads/root/');
+      const relativePaths = req.body.relativePath;
+      const files = req.files.files;
 
-    const getRelativePath = (pathArray, files) => {
-      let fileName;
-      let filePath;
-      let separatePath;
-      for (let i = 0; i < pathArray.length; i++) {
-        separatePath = pathArray[i].split('/');
-        fileName = separatePath.pop();
-        filePath = separatePath.join('/');
+       
+      for (let i = 0; i < files.length; i++) {
+        let fileData = files[i].buffer
+        //For single file
+        if(!Array.isArray(relativePaths)){
+          let pathForMkDir = relativePaths.split('/')
+          pathForMkDir.pop()
 
-        filePath = path.join(uploadsPath, filePath);
-        console.log(filePath);
+          fs.mkdirSync(destinationPath + pathForMkDir,{ recursive: true })
+          fs.writeFileSync(destinationPath + relativePaths, fileData); 
 
-        if (!fs.existsSync(filePath)) {
-          fs.mkdirSync(filePath);
-        }
-        fs.writeFileSync(filePath + '/' + fileName, files.file[i].buffer);
+          return res.json(`File has been upload`)
+         }
+         //For few files
+        let relativePath = relativePaths[i]
+        let pathForMkDir = relativePath.split('/')
+        pathForMkDir.pop()
+       
+
+        fs.mkdirSync(destinationPath + pathForMkDir,{ recursive: true })
+
+        fs.writeFileSync(destinationPath + relativePath, fileData); 
       }
-    };
-    getRelativePath(body.pathArray, files);
+     
+    res.json('Files has been upload')
+    
+    } catch (error) {
+      res.json(error)
+    }
 
-    res.send(body.pathArray);
   }
 
   async removeFile(req, res, next) {
