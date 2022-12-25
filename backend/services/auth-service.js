@@ -1,3 +1,9 @@
+const User = require('../models/user');
 class AuthService {
-  registerService(email, password, role) {}
+  register(email, password) {
+    const user = new User({ email: email, password: password });
+    user.save();
+    return user;
+  }
 }
+module.exports = new AuthService();

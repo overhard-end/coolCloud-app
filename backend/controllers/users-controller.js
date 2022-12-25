@@ -1,16 +1,23 @@
 const User = require('../models/user');
+const authService = require('../services/auth-service');
 
 class UsersController {
   async registration(req, res, next) {
     const email = req.body.email;
-    User.findOne({ email: email }, (err, user) => {
+    console.log(email);
+    const password = req.body.password;
+    await User.findOne({ email: email }, (err, user) => {
+      if (err) {
+        return res.status(500).json('Something was wrong');
+      }
       if (user) {
-        return res.json('user with email ' + email + ' already exist');
+        return res.json('User with email ' + email + ' already exist');
       }
     });
-
-    // const user = new User({ email: email, password: 'passwssord', role: 'admin' });
-    // user.save();
+    const user = authService.register(email, password);
+    if (user) {
+      res.status(200).json(user);
+    }
   }
   async auntification(req, res, next) {}
   async autorization(req, res, next) {}

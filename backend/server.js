@@ -3,12 +3,16 @@ const express = require('express');
 const app = express();
 const port = 4000;
 var cors = require('cors');
-const router = require('./router/router');
+const fileRouter = require('./router/file-router');
+const authRouter = require('./router/auth-router');
+
 const mongoose = require('mongoose');
 
 app.use(cors({ origin: 'http://localhost:3000' }));
 app.use(express.json());
-app.use('/api', router);
+
+app.use('/api', fileRouter);
+app.use('/api', authRouter);
 
 mongoose.set('strictQuery', false);
 

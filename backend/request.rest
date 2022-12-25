@@ -1,0 +1,10 @@
+GET http://localhost:4000/api/files 
+
+###
+POST http://localhost:4000/api/register
+content-type: application/json
+
+  {
+  "email":"magomed22@gmail.com",
+  "password":"123456888"
+  } 
