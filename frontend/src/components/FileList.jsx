@@ -1,6 +1,7 @@
 import { ArrowDownward, SubdirectoryArrowLeft } from '@mui/icons-material';
 import {
   Box,
+  CircularProgress,
   Container,
   Divider,
   Grid,
@@ -15,22 +16,21 @@ import {
 import React, { useEffect } from 'react';
 import { FileItem } from './FileItem';
 import { connect } from 'react-redux';
-import { fetchFiles, redoFile } from '../redux/actions/filesActions';
+import { fetchFiles, returnFile } from '../redux/actions/filesActions';
 import { formatSizeUnits } from '../utils/sizeFormat';
 
-
-const FileList = ({pathStack, dispatch, selectedFile, totalSizeByte }) => {
+const FileList = ({ isLoading, fileStack, dispatch, selectedFile, totalSizeByte }) => {
   useEffect(() => {
     dispatch(fetchFiles());
   }, [dispatch]);
 
-
   const size = formatSizeUnits(totalSizeByte);
 
- 
   const maxSize = 1;
   const tatalSizeGB = totalSizeByte / 1073741824;
   const progressSize = (tatalSizeGB / maxSize) * 100;
+  console.log(fileStack);
+  const selectedFilePath = fileStack[fileStack.length - 1]?.path.split('/');
 
   return (
     <Container
@@ -52,7 +52,7 @@ const FileList = ({pathStack, dispatch, selectedFile, totalSizeByte }) => {
           justifyContent: 'space-between',
         }}>
         <Box sx={{ width: '100%' }}>
-          <ListItemButton onClick={() => dispatch(redoFile())} sx={{ width: '150px' }}>
+          <ListItemButton onClick={() => dispatch(returnFile())} sx={{ width: '150px' }}>
             <SubdirectoryArrowLeft />
             <Typography
               sx={{
@@ -64,8 +64,8 @@ const FileList = ({pathStack, dispatch, selectedFile, totalSizeByte }) => {
           </ListItemButton>
 
           <List sx={{ display: 'inline-block' }}>
-            {pathStack
-              ? pathStack.map((path, index) => (
+            {selectedFilePath
+              ? selectedFilePath.map((path, index) => (
                   <Box key={index} sx={{ display: 'inline-block' }}>
                     <>
                       <ListItemButton
@@ -74,7 +74,7 @@ const FileList = ({pathStack, dispatch, selectedFile, totalSizeByte }) => {
                           padding: 0,
                           color: 'grey',
                         }}>
-                        <Typography variant="caption"> {path} </Typography>
+                        <Typography variant="caption"> {`${path}/`} </Typography>
                       </ListItemButton>
                     </>
                   </Box>
@@ -82,7 +82,7 @@ const FileList = ({pathStack, dispatch, selectedFile, totalSizeByte }) => {
               : ''}
           </List>
 
-          <ListItem disableGutters={true} >
+          <ListItem disableGutters={true}>
             <ListItemIcon>
               <ArrowDownward />
             </ListItemIcon>
@@ -93,33 +93,28 @@ const FileList = ({pathStack, dispatch, selectedFile, totalSizeByte }) => {
           <Divider />
         </Box>
       </Box>
-
-      <Grid item xs={12} md={6}>
-        <List>
-          
-          {selectedFile.children
-            ? selectedFile.children.map((file,index) => (
-                <FileItem
-                  id="fileItem"
-                  formatSizeUnits={formatSizeUnits}
-                  file={file}
-                  key={index}
-                  dispatch={dispatch}
-                />
-              ))
-            : ''}
-        </List>
-      </Grid>
+      {isLoading ? (
+        <CircularProgress />
+      ) : (
+        <Grid item xs={12} md={6}>
+          <List>
+            {selectedFile.children
+              ? selectedFile.children.map((file, index) => (
+                  <FileItem file={file} key={index} dispatch={dispatch} />
+                ))
+              : ''}
+          </List>
+        </Grid>
+      )}
     </Container>
   );
 };
 
 const mapStateToProps = (state) => ({
   totalSizeByte: state.folderReducer.totalSize,
-  files: state.folderReducer.files,
   selectedFile: state.folderReducer.selectedFile,
   fileStack: state.folderReducer.fileStack,
-  pathStack:state.folderReducer.pathStack
+  isLoading: state.folderReducer.isLoading,
 });
 
 const mapDispatchToProps = (dispatch) => ({ dispatch });

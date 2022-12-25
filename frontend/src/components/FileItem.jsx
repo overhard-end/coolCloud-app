@@ -1,64 +1,11 @@
-import {
-  Compress,
-  DocumentScannerOutlined,
-  FilePresent,
-  Folder,
-  FormatListNumbered,
-  Http,
-  InsertPhoto,
-  Link,
-  MusicNote,
-  PlayArrow,
-  Settings,
-  TextSnippet,
-} from '@mui/icons-material';
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import { IconButton, ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
+import { ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
 import React from 'react';
 import { FileContextMenu } from './FileContextMenu';
-import { undoFile, redoFile } from '../redux/actions/filesActions';
+import { selectFile } from '../redux/actions/filesActions';
+import { fileIcon } from '../utils/fileIcons';
+import { formatSizeUnits } from '../utils/sizeFormat';
 
-export const FileItem = ({ file, formatSizeUnits, dispatch }) => {
-  const fileIcon = (file) => {
-    switch (file.extension) {
-      case '.pdf':
-        return <PictureAsPdfIcon />;
-      case '.jpg':
-        return <InsertPhoto />;
-      case '.png':
-        return <InsertPhoto />;
-      case '.gif':
-        return <InsertPhoto />;
-      case '.lnk':
-        return <Link />;
-      case '.url':
-        return <Http />;
-      case '.doc':
-        return <DocumentScannerOutlined />;
-      case '.docx':
-        return <DocumentScannerOutlined />;
-      case '.xlsx':
-        return <FormatListNumbered />;
-      case '.pptx':
-        return <FilePresent />;
-      case '.txt':
-        return <TextSnippet />;
-      case '.ini':
-        return <Settings />;
-      case '.exe':
-        return <PlayArrow />;
-      case '.rar':
-        return <Compress />;
-      case '.mp3':
-        return <MusicNote />;
-      case '.m4a':
-        return <MusicNote />;
-
-      default:
-        return <Folder />;
-    }
-  };
-
+export const FileItem = ({ file, dispatch }) => {
   const fileSize = formatSizeUnits(file.size);
   const [open, setOpen] = React.useState(false);
   const [anchorEl, setAnchorEl] = React.useState('');
@@ -79,15 +26,13 @@ export const FileItem = ({ file, formatSizeUnits, dispatch }) => {
   return (
     <>
       <ListItemButton
-        onClick={() => dispatch(undoFile(file))}
+        onClick={() => dispatch(selectFile(file))}
         onContextMenu={(e) => handleOpenContextMenu(e)}
         disableGutters={true}
-        
         divider={true}
         dense={true}
-        sx={{ marginRight: '70px' }}
-        >
-        <ListItemIcon>{fileIcon(file)}</ListItemIcon>
+        sx={{ marginRight: '70px' }}>
+        <ListItemIcon>{fileIcon(file.extension)}</ListItemIcon>
         <ListItemText
           primary={file.name}
           sx={{ width: '80px' }}

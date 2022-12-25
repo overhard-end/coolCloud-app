@@ -1,42 +1,39 @@
-
 import axios from 'axios';
 import store from '../store';
-const folderState = store.getState().folderReducer
-export function fetchFiles() {
+
+export function fetchFiles(currentFile) {
   return async (dispatch) => {
     try {
       const response = await axios.get('http://localhost:4000/api/files');
-      return dispatch({ type: 'SET_FILES', payload: response.data });
-
+      return dispatch({ type: 'SET_FILES', payload: response.data, currentFile: currentFile });
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
-    
   };
 }
 
-export  function addFile(files) {
-  return async (dispatch)=>{
-    const formData = new FormData()
-      console.log(folderState)
-      for(let i = 0; i < files.length; i++){
-        let relativePath = files[i].webkitRelativePath
-        if(!relativePath){
-          relativePath =  `/${files[i].name}`
+export function uploadFile(files) {
+  return async (dispatch) => {
+    try {
+      const formData = new FormData();
+      const currentFile = store.getState().folderReducer.selectedFile;
+      for (let i = 0; i < files.length; i++) {
+        let relativePath = files[i].webkitRelativePath;
+        if (!relativePath) {
+          relativePath = `${currentFile.path}/${files[i].name}`;
         }
-        formData.append('files',files[i])
-        formData.append('relativePath',relativePath)
-        
+        formData.append('files', files[i]);
+        formData.append('relativePath', relativePath);
       }
-      const response = await axios.post('http://localhost:4000/api/files',formData)
-      if(response.status === 200) {
-        return dispatch(fetchFiles())
+      const response = await axios.post('http://localhost:4000/api/files', formData);
+      if (response.status === 200) {
+        return dispatch(fetchFiles(currentFile));
       }
-     
-      
+    } catch (error) {
+      console.log(error);
     }
-  }
- 
+  };
+}
 
 export async function removeFile(file) {
   try {
@@ -53,16 +50,16 @@ export async function removeFile(file) {
   }
 }
 
-export function undoFile(file) {
+export function selectFile(file) {
   if (file) {
     return {
-      type: 'UNDO_FILE',
+      type: 'SELECT_FILE',
       payload: file,
     };
   }
 }
-export function redoFile() {
+export function returnFile() {
   return {
-    type: 'REDO_FILE',
+    type: 'RETURN_FILE',
   };
 }

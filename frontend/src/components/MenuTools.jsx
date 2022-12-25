@@ -12,7 +12,7 @@ import {
 } from '@mui/material';
 import React from 'react';
 import { connect } from 'react-redux';
-import { addFile } from '../redux/actions/filesActions';
+import { uploadFile } from '../redux/actions/filesActions';
 
 const MenuTools = ({ dispatch, anchorEl, openMenu, handleClose }) => {
   const [open, setOpen] = React.useState(false);
@@ -80,7 +80,7 @@ const MenuTools = ({ dispatch, anchorEl, openMenu, handleClose }) => {
         <MenuItem variant="contained" component="label">
           <input
             id="filesInput"
-            onChange={(e) => dispatch(addFile(e.target.files))}
+            onChange={(e) => dispatch(uploadFile(e.target.files))}
             onClick={(e) => (e.target.value = null)}
             hidden
             accept="file/*"
@@ -93,7 +93,7 @@ const MenuTools = ({ dispatch, anchorEl, openMenu, handleClose }) => {
         <MenuItem variant="contained" component="label">
           <input
             id="dirInput"
-            onChange={(e) => dispatch(addFile(e.target.files))}
+            onChange={(e) => dispatch(uploadFile(e.target.files))}
             onClick={(e) => (e.target.value = null)}
             hidden
             webkitdirectory="true"

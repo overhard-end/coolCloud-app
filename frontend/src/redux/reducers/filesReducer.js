@@ -1,50 +1,52 @@
+const SELECT_FILE = 'SELECT_FILE';
+const SET_FILES = 'SET_FILES';
+const RETURN_FILE = 'RETURN_FILE';
+const UPLOAD_FILE = 'UPLOAD_FILE';
+
 const initialState = {
   files: {},
-  selectedFile: [],
+  selectedFile: {},
   fileStack: [],
-  pathStack:['/Disk'],
   totalSize: 0,
+  isLoading: true,
 };
+
 const filesReducer = (state = initialState, action) => {
   switch (action.type) {
-    case 'SET_FILES':
+    case SET_FILES:
       return {
         ...state,
         files: action.payload,
         selectedFile: action.payload,
-        fileStack: [action.payload],
         totalSize: action.payload.size,
+        fileStack: [action.payload],
+        isLoading: false,
       };
-    case 'UNDO_FILE':
-      if (!action.payload.children) {
-        return state
-      }
 
-      const undoStack = state.fileStack;
-      undoStack.push(action.payload);
-      const newPathStack = state.pathStack;
-      newPathStack.push(action.payload?.path)
+    case UPLOAD_FILE:
       return {
         ...state,
-        fileStack: undoStack,
-        selectedFile: action.payload,
-        pathStack:newPathStack
       };
-    case 'REDO_FILE':
-      if (state.fileStack.length < 2) {
-        return state
+
+    case SELECT_FILE:
+      if (!action.payload.children) {
+        return state;
       }
-        
-      
-      const redoStack = state.fileStack;
-      redoStack.pop();
-      const decPathStack = state.pathStack;
-      decPathStack.pop()
       return {
         ...state,
-        selectedFile: redoStack[redoStack.length - 1],
-        fileStack: redoStack,
-        pathStack:decPathStack
+        fileStack: [...state.fileStack, action.payload],
+        selectedFile: action.payload,
+      };
+    case RETURN_FILE:
+      if (state.fileStack.length < 2) {
+        return state;
+      }
+      const fileStackPop = state.fileStack;
+      fileStackPop.pop();
+      return {
+        ...state,
+        fileStack: fileStackPop,
+        selectedFile: state.fileStack.at(-1),
       };
 
     default:
