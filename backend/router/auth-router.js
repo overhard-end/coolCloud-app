@@ -1,22 +1,35 @@
-const { validationResult, body, check } = require('express-validator');
-const usersController = require('../controllers/users-controller');
+const authController = require('../controllers/auth-controller');
 const express = require('express');
 const token = require('../utils/token');
 const refreshToken = require('../middlewares/refresh-token');
 const router = express.Router();
+const { validationResult, body } = require('express-validator');
 
 router.post(
   '/register',
   body('email').isEmail(),
-
   body('password').isLength({ min: 8 }),
-  (req, res) => {
+  (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(401).json({ message: errors.array() });
+      return res.status(401).json({ ValidatorMessage: errors.array() });
     }
-    usersController.registration({ email: req.body.email, password: req.body.password }, res);
+    next();
   },
+  authController.registration,
+);
+router.post(
+  '/login',
+  body('email').isEmail(),
+  body('password').isLength({ min: 8 }),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(401).json({ ValidatorMessage: errors.array() });
+    }
+    next();
+  },
+  authController.login,
 );
 router.post('/token', refreshToken);
 

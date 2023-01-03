@@ -1,5 +1,7 @@
+
 GET http://localhost:4000/api/files 
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NzIwNzI2OTcsImV4cCI6MTY3MjA3MjcyN30.fab6bRjO_siWdTMunYfERo0kWzJo3b7puv29rmEgxR4
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6IjhAZ21haWwuY29tIiwiaWF0IjoxNjcyNzM4NzU3LCJleHAiOjE2NzI3Mzg4MTd9.0pN67vDvasjEE4Cxxur1MX-ORo0jBJ9s08PGxmS8Iks
+
 
 ###
 
@@ -7,13 +9,21 @@ POST http://localhost:4000/api/token
 content-type: application/json
 
 {
-  "refreshToken":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoibWRmZmY1ZmRkZGZkYWZmZ0BnbWFpbC5jb20iLCJpYXQiOjE2NzIwNzI2NTR9.OpqoHraBg32lHYFKEdnNLE1Irn5hL0wY1eb1mb5hK5I"
+  "refreshToken":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6IjhAZ21haWwuY29tIiwiaWF0IjoxNjcyNzM4NjkxfQ.LIyhvnNefucF8zq6yg9OwWH8YgLsVlc0Ok9BdliUHu8"
 }
 ###
 POST http://localhost:4000/api/register
 content-type: application/json
 
   {
-  "email":"mdfff5fdddfdaffg@gmail.com",
-  "password":"zmadkf343DSDS21"
+  "email":"8@gmail.com",
+  "password":"43DfdfdsfsdSD"
+  } 
+###
+POST http://localhost:4000/api/login
+content-type: application/json
+
+  {
+  "email":"8@gmail.com",
+  "password":"43DfdfdsfsdSD"
   } 
