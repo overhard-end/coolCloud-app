@@ -8,20 +8,26 @@ import FileList from './components/FileList';
 import { Settings } from './components/Settings';
 import { Profile } from './components/Profile';
 import { SignIn } from './components/Sign-in';
+import Private from './hoc/Private';
 import './App.css';
 
 function App() {
   return (
     <div className="App">
-      <Header />
-      <SideBar />
-
       <Routes>
-        <Route exact path="/" element={<FileList />}></Route>
-        <Route path="/signIn" element={<SignIn />}></Route>
-        <Route path="/settings" element={<Settings />}></Route>
-        <Route path="/profile" element={<Profile />}></Route>
+        <Route path="/login" element={<SignIn />}></Route>
       </Routes>
+      {Private(
+        <>
+          <Header />
+          <SideBar />
+          <Routes>
+            <Route path="/" element={<FileList />}></Route>
+            <Route path="/settings" element={<Settings />}></Route>
+            <Route path="/profile" element={<Profile />}></Route>
+          </Routes>
+        </>,
+      )}
     </div>
   );
 }

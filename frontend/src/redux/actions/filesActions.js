@@ -5,7 +5,7 @@ export function fetchFiles(currentFile) {
   return async (dispatch) => {
     try {
       const response = await axios.get('http://localhost:4000/api/files');
-      return dispatch({ type: 'SET_FILES', payload: response.data, currentFile: currentFile });
+      return dispatch({ type: 'SET_FILES', payload: response.data });
     } catch (error) {
       console.log(error);
     }
