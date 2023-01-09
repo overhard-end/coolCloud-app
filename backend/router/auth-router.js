@@ -7,12 +7,12 @@ const { validationResult, body } = require('express-validator');
 
 router.post(
   '/register',
-  body('email').isEmail(),
-  body('password').isLength({ min: 8 }),
+  body('email').isEmail().withMessage('Email must be a valid email address'),
+  body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(401).json({ ValidatorMessage: errors.array() });
+      return res.status(403).json({ message: errors.array() });
     }
     next();
   },
@@ -20,12 +20,12 @@ router.post(
 );
 router.post(
   '/login',
-  body('email').isEmail(),
-  body('password').isLength({ min: 8 }),
+  body('email').isEmail().withMessage('Email must be email format'),
+  body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(401).json({ ValidatorMessage: errors.array() });
+      return res.status(403).json({ message: errors.array() });
     }
     next();
   },

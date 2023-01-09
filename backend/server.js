@@ -5,15 +5,13 @@ const port = 4000;
 var cors = require('cors');
 const fileRouter = require('./router/file-router');
 const authRouter = require('./router/auth-router');
-
 const mongoose = require('mongoose');
 
-app.use(cors({ origin: 'http://localhost:3000' }));
+app.use(cors({ credentials: true, origin: 'http://localhost:3000' }));
 app.use(express.json());
 
 app.use('/api', fileRouter);
 app.use('/api', authRouter);
-
 mongoose.set('strictQuery', false);
 
 async function start() {

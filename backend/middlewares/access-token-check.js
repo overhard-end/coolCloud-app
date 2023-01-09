@@ -1,5 +1,5 @@
-const jwt = require('jsonwebtoken');
 const Token = require('../utils/token');
+const accessKey = process.env.JWT_ACCESS_TOKEN_KEY;
 
 function accessTokenCheck(req, res, next) {
   try {
@@ -8,9 +8,8 @@ function accessTokenCheck(req, res, next) {
 
     if (!token) return res.sendStatus(401);
 
-    const user = Token.checkAccessToken(token);
-    console.log(user);
-    if (!user) return res.status(403).json('You must be logged in');
+    const user = Token.checkToken(token, accessKey);
+    if (!user) return res.sendStatus(401);
 
     next();
   } catch (error) {

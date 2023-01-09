@@ -1,10 +1,11 @@
-import axios from 'axios';
+import api from '../../api/api';
+
 import store from '../store';
 
 export function fetchFiles(currentFile) {
   return async (dispatch) => {
     try {
-      const response = await axios.get('http://localhost:4000/api/files');
+      const response = await api.get('/files');
       return dispatch({ type: 'SET_FILES', payload: response.data });
     } catch (error) {
       console.log(error);
@@ -25,7 +26,7 @@ export function uploadFile(files) {
         formData.append('files', files[i]);
         formData.append('relativePath', relativePath);
       }
-      const response = await axios.post('http://localhost:4000/api/files', formData);
+      const response = await api.post('/files', formData);
       if (response.status === 200) {
         return dispatch(fetchFiles(currentFile));
       }
@@ -37,7 +38,7 @@ export function uploadFile(files) {
 
 export async function removeFile(file) {
   try {
-    const response = axios.post(`http://localhost:4000/api/removeFile`, {
+    const response = api.post(`/removeFile`, {
       file: {
         path: file.path,
         type: file.type,

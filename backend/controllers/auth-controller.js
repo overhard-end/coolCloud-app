@@ -8,11 +8,14 @@ class AuthController {
       const password = req.body.password;
 
       const userCheck = await authService.getUser(email);
-      if (userCheck) return res.status(400).json('User with email ' + email + ' already exist');
+      if (userCheck)
+        return res.status(403).json({
+          message: [
+            { value: email, msg: `User with email ${email} already exist`, param: 'email' },
+          ],
+        });
 
       const newUser = await authService.register(email, password);
-
-      if (!newUser) return res.status(500).json('Cannot register user');
       return res.status(201).json(newUser);
     } catch (error) {
       console.log(error);
@@ -27,11 +30,15 @@ class AuthController {
 
       const userDB = await authService.getUser(email);
       if (!userDB) {
-        return res.status(403).json(`User with ${email} don't exist`);
+        return res.status(403).json({
+          message: [{ value: email, msg: `User with <${email}> don't exist`, param: 'email' }],
+        });
       }
       const user = await authService.login(userDB, password);
       if (!user) {
-        return res.status(403).json('Password is wrong');
+        return res
+          .status(403)
+          .json({ message: [{ value: password, msg: 'Wrong password', param: 'password' }] });
       }
       return res.status(200).json(user);
     } catch (error) {

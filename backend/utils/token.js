@@ -2,24 +2,15 @@ const jwt = require('jsonwebtoken');
 const accessKey = process.env.JWT_ACCESS_TOKEN_KEY;
 const refreshKey = process.env.JWT_RESRESH_TOKEN_KEY;
 class Token {
-  checkRefreshToken(token) {
+  checkToken(token, tokenSecret) {
     try {
-      const decoded = jwt.verify(token, refreshKey);
-      if (!decoded) return false;
+      const decoded = jwt.verify(token, tokenSecret);
       return decoded;
     } catch (error) {
-      console.log(error);
+      return false;
     }
   }
-  checkAccessToken(token) {
-    try {
-      const decoded = jwt.verify(token, accessKey);
-      if (!decoded) return false;
-      return decoded;
-    } catch (error) {
-      console.log(error);
-    }
-  }
+
   createAccessToken(email) {
     return jwt.sign({ email: email }, accessKey, { expiresIn: '60s' });
   }

@@ -1,16 +1,9 @@
-import { useNavigate } from 'react-router-dom';
-import store from '../redux/store';
-import { useEffect } from 'react';
-import { connect } from 'react-redux';
-const Private = (props) => {
-  const navigate = useNavigate();
-  const isAuth = store.getState()?.userReducer?.isAuth;
-  useEffect(() => {
-    if (!isAuth) {
-      return navigate('/login');
-    }
-    return { ...props };
-  }, [isAuth]);
-};
+import { Navigate, Outlet } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+const Private = ({ children }) => {
+  const isAuth = useSelector((state) => state.userReducer.isAuth);
+  if (!isAuth) return <Navigate to="/login" replace />;
 
+  return children ? children : <Outlet />;
+};
 export default Private;
