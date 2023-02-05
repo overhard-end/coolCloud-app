@@ -1,48 +1,52 @@
 const User = require('../models/user');
-const RefreshToken = require('../models/token');
+const Session = require('../models/session');
 
 const Token = require('../utils/token');
 const Hash = require('../utils/hash');
+const UserDTO = require('../DTOs/userDTO');
 class AuthService {
   async getUser(email) {
     const user = await User.findOne({ email: email });
-    if (user === null) return undefined;
+    if (user === null) return false;
     return user;
   }
 
-  async register(email, password) {
+  async register(email, password, userAgent) {
     try {
       const hashPassword = await Hash.createPasswordHash(password);
+      const newUser = await User.create({ email: email, password: hashPassword });
+      const tokens = Token.tokenPair(newUser.email);
 
-      const user = await User.create({ email: email, password: hashPassword });
-      const tokens = Token.tokenPair(user.email);
-
-      const obj = user.toObject();
-      const str = JSON.stringify(obj);
-      const jsonUser = JSON.parse(str);
-      delete jsonUser.password;
-      const newUser = { user: jsonUser, ...tokens };
-      await RefreshToken.create({
+      const session = {
         refreshToken: tokens.refreshToken,
-        userId: jsonUser._id,
-      });
+        userId: newUser.id,
+        expiresIn: process.env.TOKEN_EXPIRES_TIME,
+        fingerprint: userAgent,
+      };
+      await Session.create(session);
 
-      return newUser;
+      return { user: newUser, ...tokens };
     } catch (error) {
       console.log(error);
-      return undefined;
+      return false;
     }
   }
-  async login(userDB, password) {
-    const checkPassword = await Hash.comparePassword(userDB.password, password);
-    if (!checkPassword) return false;
+  async login(user, userAgent) {
+    try {
+      const tokens = Token.tokenPair(user.email);
 
-    const obj = userDB.toObject();
-    const str = JSON.stringify(obj);
-    const jsonUser = JSON.parse(str);
-    delete jsonUser.password;
-    const tokens = Token.tokenPair(jsonUser.email);
-    return { user: jsonUser, ...tokens };
+      const session = {
+        refreshToken: tokens.refreshToken,
+        userId: user._id,
+        expiresIn: process.env.TOKEN_EXPIRES_TIME,
+        fingerprint: userAgent,
+      };
+      await Session.create(session);
+      return tokens;
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
   }
 }
 module.exports = new AuthService();

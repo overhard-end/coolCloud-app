@@ -4,6 +4,7 @@ const token = require('../utils/token');
 const refreshToken = require('../middlewares/refresh-token');
 const router = express.Router();
 const { validationResult, body } = require('express-validator');
+const accessTokenCheck = require('../middlewares/access-token-check');
 
 router.post(
   '/register',
@@ -32,5 +33,6 @@ router.post(
   authController.login,
 );
 router.post('/token', refreshToken);
+router.get('/user', accessTokenCheck, authController.getUserCredentials);
 
 module.exports = router;

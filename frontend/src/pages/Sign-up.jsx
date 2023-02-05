@@ -21,13 +21,14 @@ export const SignUp = () => {
     if (!user.email || !user.password || !user.confirmPassword) {
       errorSound.play();
       const errorAction = [{ param: 'error', msg: 'Please enter all required fields' }];
-      return dispatch({ type: 'ERROR', payload: errorAction });
+      return dispatch({ type: 'USER_MESSAGE', payload: errorAction });
     }
-    if (!user.password === user.confirmPassword) {
+    if (!(user.password === user.confirmPassword)) {
       const errorAction = [{ param: 'error', msg: 'Password dont match to confirm password' }];
-      return dispatch({ type: 'ERROR', payload: errorAction });
+      return dispatch({ type: 'USER_MESSAGE', payload: errorAction });
     }
-    dispatch(registration(user));
+    const { email, password } = user;
+    dispatch(registration(email, password));
   };
 
   return (
@@ -60,7 +61,7 @@ export const SignUp = () => {
 
         <TextField
           size="small"
-          onClick={() => dispatch({ type: 'ERROR', payload: [] })}
+          onClick={() => dispatch({ type: 'USER_MESSAGE', payload: [] })}
           onChange={(e) => setUser({ ...user, email: e.target.value })}
           label="Email"
           variant="outlined"
@@ -69,7 +70,7 @@ export const SignUp = () => {
         />
         <TextField
           size="small"
-          onClick={() => dispatch({ type: 'ERROR', payload: [] })}
+          onClick={() => dispatch({ type: 'USER_MESSAGE', payload: [] })}
           onChange={(e) => setUser({ ...user, password: e.target.value })}
           label="Password"
           variant="outlined"
@@ -78,7 +79,7 @@ export const SignUp = () => {
         />
         <TextField
           size="small"
-          onClick={() => dispatch({ type: 'ERROR', payload: [] })}
+          onClick={() => dispatch({ type: 'USER_MESSAGE', payload: [] })}
           onChange={(e) => setUser({ ...user, confirmPassword: e.target.value })}
           label="Confirm password"
           variant="outlined"

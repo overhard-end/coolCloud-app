@@ -1,37 +1,49 @@
 import axios from 'axios';
-import { useDispatch, useSelector } from 'react-redux';
+import jwtDecode from 'jwt-decode';
+import dayJs from 'dayjs';
 
-const api = axios.create({
-  baseURL: 'http://localhost:4000/api',
-  withCredentials: true,
-});
+import store from '../redux/store';
+import { refreshToken } from '../redux/actions/userAction';
 
-api.interceptors.request.use(async (req) => {
-  const accessToken = localStorage.getItem('accessToken');
-  if (accessToken) {
-    req.headers.Authorization = `Bearer ${accessToken}`;
+export class Http {
+  constructor(status) {
+    this.withAuth = status && status.withAuth ? status.withAuth : false;
+    this.instance = axios.create({ baseURL: 'http://localhost:4000/api', withCredentials: true });
+    return this.init();
   }
-  return req;
-});
 
-api.interceptors.response.use(
-  (res) => {
-    return res;
-  },
-  async (error) => {
-    const status = error.response ? error.response.status : null;
-    console.log(status);
-    if (status === 401) {
-      const response = await axios.post('http://localhost:4000/api/token', {
-        refreshToken: localStorage.getItem('refreshToken'),
+  init() {
+    if (this.withAuth) {
+      const state = store.getState();
+      const dispatch = store.dispatch;
+
+      this.instance.interceptors.request.use((request) => {
+        const accessToken = state.userReducer.accessToken || localStorage.getItem('accessToken');
+        request.headers['Authorization'] = 'Bearer ' + accessToken;
+        localStorage.removeItem('accessToken');
+        return request;
       });
-      if (response.status === 201) {
-        localStorage.setItem('accessToken', response.data.accessToken);
-      }
-      console.log('refreshing token invalid response');
-    }
-    return Promise.reject(error);
-  },
-);
 
-export default api;
+      this.instance.interceptors.response.use(
+        (response) => {
+          return response;
+        },
+        async (error) => {
+          const originalRequest = error.config;
+          if (error.response.status === 401 && !originalRequest._retry) {
+            originalRequest._retry = true;
+            // the dispath return accessToken that refreshToken actionCreator's returned
+            const accessToken = await dispatch(refreshToken());
+            if (accessToken) {
+              localStorage.setItem('accessToken', accessToken);
+              return this.instance(originalRequest);
+            }
+          }
+          return Promise.reject(error);
+        },
+      );
+    }
+
+    return this.instance;
+  }
+}

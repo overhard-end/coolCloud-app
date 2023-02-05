@@ -1,8 +1,10 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+
 const Public = ({ children }) => {
-  const isAuth = useSelector((state) => state.userReducer.isAuth);
-  if (isAuth) return <Navigate to="/" />;
+  const accessToken = useSelector((state) => state.userReducer.accessToken);
+
+  if (accessToken) return <Navigate to="/" />;
 
   return children ? children : <Outlet />;
 };

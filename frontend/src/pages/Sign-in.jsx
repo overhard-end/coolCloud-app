@@ -22,7 +22,7 @@ export const SignIn = () => {
     if (!email || !password) {
       errorSound.play();
       const errorAction = [{ param: 'error', msg: 'Please enter all required fields' }];
-      return dispatch({ type: 'ERROR', payload: errorAction });
+      return dispatch({ type: 'USER_MESSAGE', payload: errorAction });
     }
     dispatch(login(email, password));
   };
@@ -57,7 +57,7 @@ export const SignIn = () => {
 
         <TextField
           size="small"
-          onClick={() => dispatch({ type: 'ERROR', payload: [] })}
+          onClick={() => dispatch({ type: 'USER_MESSAGE', payload: [] })}
           onChange={(e) => setEmail(e.target.value)}
           label="Email"
           variant="outlined"
@@ -66,7 +66,7 @@ export const SignIn = () => {
         />
         <TextField
           size="small"
-          onClick={() => dispatch({ type: 'ERROR', payload: [] })}
+          onClick={() => dispatch({ type: 'USER_MESSAGE', payload: [] })}
           onChange={(e) => setPassword(e.target.value)}
           label="Password"
           variant="outlined"

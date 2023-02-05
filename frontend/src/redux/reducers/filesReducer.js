@@ -1,13 +1,11 @@
-const SELECT_FILE = 'SELECT_FILE';
-const SET_FILES = 'SET_FILES';
-const RETURN_FILE = 'RETURN_FILE';
-const UPLOAD_FILE = 'UPLOAD_FILE';
+import { SET_FILES, SELECT_FILE, RETURN_FILE } from '../actions/types';
 
 const initialState = {
   files: {},
   selectedFile: {},
   fileStack: [],
-  totalSize: 0,
+  size: 0,
+  maxSize: 0,
   isLoading: true,
 };
 
@@ -18,14 +16,10 @@ const filesReducer = (state = initialState, action) => {
         ...state,
         files: action.payload,
         selectedFile: action.payload,
-        totalSize: action.payload.size,
+        size: action.payload.size,
+        maxSize: action.payload.maxSize,
         fileStack: [action.payload],
         isLoading: false,
-      };
-
-    case UPLOAD_FILE:
-      return {
-        ...state,
       };
 
     case SELECT_FILE:

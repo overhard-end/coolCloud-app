@@ -5,9 +5,15 @@ class Token {
   checkToken(token, tokenSecret) {
     try {
       const decoded = jwt.verify(token, tokenSecret);
-      return decoded;
-    } catch (error) {
-      return false;
+      return {
+        valid: true,
+        decoded: decoded,
+      };
+    } catch (err) {
+      return {
+        valid: false,
+        message: err.message,
+      };
     }
   }
 

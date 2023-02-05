@@ -5,11 +5,11 @@ const filesService = require('../services/files-service');
 class FilesController {
   async sendFiles(req, res, next) {
     try {
-      console.log(process.env.API_KEY);
       const filesTree = filesService.getfilesTree(path.join(__dirname, '../uploads/root'));
-      res.json(filesTree);
+      filesTree.maxSize = 15 * 1024 * 1024 * 1024;
+      res.status(200).json(filesTree);
     } catch (error) {
-      res.status(400).json({ error });
+      res.status(500).json('Server error');
     }
   }
 

@@ -1,4 +1,4 @@
-import { CreateNewFolder, DriveFolderUpload, UploadFile } from '@mui/icons-material';
+import { Add, CreateNewFolder, DriveFolderUpload, UploadFile } from '@mui/icons-material';
 import {
   Button,
   Dialog,
@@ -11,69 +11,66 @@ import {
   TextField,
 } from '@mui/material';
 import React from 'react';
-import { connect } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { uploadFile } from '../redux/actions/filesActions';
 
-const MenuTools = ({ dispatch, anchorEl, openMenu, handleClose }) => {
+export const MenuTools = () => {
+  const dispatch = useDispatch();
   const [open, setOpen] = React.useState(false);
-  const [text, setText] = React.useState(false);
-  const [textValidation, setTextValidation] = React.useState(false);
+  const [folderName, setFolderName] = React.useState('');
+  const [anchorEl, setAnchorEl] = React.useState(null);
+  const [openCreateFolder, setOpenCreateFolder] = React.useState(false);
 
-  function handleOpenDialog() {
+  const openMenuTools = (e) => {
+    setAnchorEl(e.currentTarget);
     setOpen(true);
-  }
-  function handleCloseDialog() {
-    setOpen(false);
-  }
-  function ValidateFolderName(value) {
-    if (value.length <= 0) {
-      setTextValidation(true);
-    }
-    setTextValidation(false);
-    setText(value);
-  }
-  function createFolder() {
-    if (text.length >= 1) {
-      setOpen(false);
-      handleClose();
-      setText('');
-    } else {
-      setTextValidation(true);
-    }
-  }
+  };
 
+  const handleCreateFolder = () => {
+    if (folderName.length <= 1) return false;
+    setOpenCreateFolder(false);
+    setOpen(false);
+  };
   return (
-    <div>
-      <Menu
-        id="basic-menu"
-        anchorEl={anchorEl}
-        open={openMenu}
-        onClose={handleClose}
-        MenuListProps={{
-          'aria-labelledby': 'basic-button',
-        }}>
-        <MenuItem id="create-new-folder" onClick={handleOpenDialog}>
+    <>
+      <Button
+        sx={{ borderRadius: '50px' }}
+        startIcon={<Add />}
+        variant="outlined"
+        color="inherit"
+        id="basic-button"
+        aria-controls={open ? 'basic-menu' : undefined}
+        aria-haspopup="true"
+        aria-expanded={open ? 'true' : undefined}
+        onClick={(e) => openMenuTools(e)}>
+        Создать
+      </Button>
+      <Menu id="basic-menu" anchorEl={anchorEl} open={open} onClose={() => setOpen(false)}>
+        <MenuItem id="create-new-folder" onClick={() => setOpenCreateFolder(true)}>
           <CreateNewFolder />
           Создать папку
         </MenuItem>
-        <Dialog aria-labelledby="create-new-folder" open={open} onClose={handleCloseDialog}>
+        <Dialog
+          aria-labelledby="create-new-folder"
+          open={openCreateFolder}
+          onClose={() => setOpenCreateFolder(false)}>
           <DialogContent>
             <DialogContentText>Не давай тупое название по типу 'аааа' или '5555'</DialogContentText>
             <TextField
-              error={textValidation}
               autoFocus
               margin="dense"
               id="folderName"
               label="Введите название папки*"
-              helperText={textValidation ? 'Поле не должо быть пустым !' : ''}
+              // helperText={textValidation ? 'Поле не должо быть пустым !' : ''}
               type="text"
               fullWidth
-              onChange={(e) => ValidateFolderName(e.target.value)}
+              value={folderName}
+              onChange={(e) => setFolderName(e.target.value)}
               variant="standard"
             />
           </DialogContent>
           <DialogActions>
-            <Button onClick={createFolder}>Создать </Button>
+            <Button onClick={handleCreateFolder}>Создать </Button>
           </DialogActions>
         </Dialog>
         <Divider />
@@ -105,13 +102,6 @@ const MenuTools = ({ dispatch, anchorEl, openMenu, handleClose }) => {
           Загрузить папку
         </MenuItem>
       </Menu>
-    </div>
+    </>
   );
 };
-function mapDispatchToProps(dispatch) {
-  return {
-    dispatch: dispatch,
-  };
-}
-
-export default connect(null, mapDispatchToProps)(MenuTools);

@@ -1,14 +1,16 @@
-import api from '../../api/api';
-
+import fileService from '../../services/fileService';
+import { SET_FILES, SELECT_FILE, RETURN_FILE } from '../actions/types';
 import store from '../store';
 
-export function fetchFiles(currentFile) {
+export function fetchFiles() {
   return async (dispatch) => {
     try {
-      const response = await api.get('/files');
-      return dispatch({ type: 'SET_FILES', payload: response.data });
+      const response = await fileService.getFiles();
+      if (response.status === 200) {
+        return dispatch({ type: SET_FILES, payload: response.data });
+      }
     } catch (error) {
-      console.log(error);
+      console.log('fethFiles', error);
     }
   };
 }
@@ -26,7 +28,7 @@ export function uploadFile(files) {
         formData.append('files', files[i]);
         formData.append('relativePath', relativePath);
       }
-      const response = await api.post('/files', formData);
+      const response = await fileService.addFiles(formData);
       if (response.status === 200) {
         return dispatch(fetchFiles(currentFile));
       }
@@ -36,31 +38,28 @@ export function uploadFile(files) {
   };
 }
 
-export async function removeFile(file) {
-  try {
-    const response = api.post(`/removeFile`, {
-      file: {
+export function removeFile(file) {
+  return async (dispatch) => {
+    try {
+      const files = {
         path: file.path,
         type: file.type,
-      },
-    });
-    if (response.status === 200) {
+      };
+      const response = await fileService.removeFiles(files);
+      if (response.status === 200) {
+        dispatch(fetchFiles());
+      }
+    } catch (error) {
+      console.log(error);
     }
-  } catch (error) {
-    console.log(error);
-  }
-}
-
-export function selectFile(file) {
-  if (file) {
-    return {
-      type: 'SELECT_FILE',
-      payload: file,
-    };
-  }
-}
-export function returnFile() {
-  return {
-    type: 'RETURN_FILE',
   };
 }
+
+export const selectFile = (file) => (dispatch) => {
+  const action = { type: SELECT_FILE, payload: file };
+  dispatch(action);
+};
+
+export const returnFile = () => (dispatch) => {
+  dispatch({ typy: RETURN_FILE });
+};

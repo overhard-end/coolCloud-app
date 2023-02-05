@@ -5,7 +5,6 @@ import {
   Container,
   Divider,
   Grid,
-  LinearProgress,
   List,
   ListItem,
   ListItemButton,
@@ -13,24 +12,16 @@ import {
   ListItemText,
   Typography,
 } from '@mui/material';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { FileItem } from '../components/FileItem';
 import { connect } from 'react-redux';
-import { fetchFiles, returnFile } from '../redux/actions/filesActions';
-import { formatSizeUnits } from '../utils/sizeFormat';
+import { returnFile } from '../redux/actions/filesActions';
 import Header from '../components/Header';
 import { SideBar } from '../components/SideBar';
-
-const FileList = ({ isLoading, fileStack, dispatch, selectedFile, totalSizeByte }) => {
-  useEffect(() => {
-    dispatch(fetchFiles());
-  }, [dispatch]);
-  const size = formatSizeUnits(totalSizeByte);
-
-  const maxSize = 1;
-  const tatalSizeGB = totalSizeByte / 1073741824;
-  const progressSize = (tatalSizeGB / maxSize) * 100;
-  console.log(fileStack);
+import { FilesProgresUI } from '../components/FilesProgresUI';
+import { useDispatch } from 'react-redux';
+const FileList = ({ isLoading, fileStack, selectedFile }) => {
+  const dispatch = useDispatch();
   const selectedFilePath = fileStack[fileStack.length - 1]?.path.split('/');
 
   return (
@@ -38,17 +29,11 @@ const FileList = ({ isLoading, fileStack, dispatch, selectedFile, totalSizeByte 
       <Header />
       <SideBar />
       <Container
-        sx={{
-          paddingTop: '100px',
-          minWidth: '390px',
-        }}>
+        disableGutters={true}
+        maxWidth="70%"
+        sx={{ paddingLeft: '240px', paddingTop: '100px' }}>
         <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-          <Box sx={{}}>
-            <LinearProgress variant="determinate" value={progressSize} />
-            <Typography variant="caption" component="div" color="text.secondary">
-              {`Использовано ${size}  из ${maxSize}ГБ`}
-            </Typography>
-          </Box>
+          <FilesProgresUI />
         </Box>
         <Box
           sx={{
@@ -116,12 +101,10 @@ const FileList = ({ isLoading, fileStack, dispatch, selectedFile, totalSizeByte 
 };
 
 const mapStateToProps = (state) => ({
-  totalSizeByte: state.folderReducer.totalSize,
-  selectedFile: state.folderReducer.selectedFile,
-  fileStack: state.folderReducer.fileStack,
-  isLoading: state.folderReducer.isLoading,
+  selectedFile: state.filesReducer.selectedFile,
+  fileStack: state.filesReducer.fileStack,
+  isLoading: state.filesReducer.isLoading,
+  files: state.filesReducer.files,
 });
 
-const mapDispatchToProps = (dispatch) => ({ dispatch });
-
-export default connect(mapStateToProps, mapDispatchToProps)(FileList);
+export default connect(mapStateToProps)(FileList);

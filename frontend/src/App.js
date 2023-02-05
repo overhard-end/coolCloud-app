@@ -9,10 +9,20 @@ import { SignIn } from './pages/Sign-in';
 import { SignUp } from './pages/Sign-up';
 import Private from './hoc/Private';
 import './App.css';
-
 import Public from './hoc/Public';
 
+import { useDispatch } from 'react-redux';
+import { getUserCredentials } from './redux/actions/userAction';
+import { fetchFiles } from './redux/actions/filesActions';
+import { useEffect } from 'react';
+
 function App() {
+  const dispatch = useDispatch();
+  useEffect(() => {
+    dispatch(getUserCredentials());
+    dispatch(fetchFiles());
+  }, []);
+
   return (
     <div className="App">
       <>

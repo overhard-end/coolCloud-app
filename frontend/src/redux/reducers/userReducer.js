@@ -1,34 +1,36 @@
+import { SET_USER, LOGOUT, USER_MESSAGE, REFRESH_TOKEN } from '../actions/types';
 const initialState = {
+  id: '',
   email: '',
   role: '',
-  isAuth: localStorage.getItem('accessToken') ? true : false,
-  accessToken: localStorage.getItem('accessToken') ? localStorage.getItem('accessToken') : null,
+  accessToken: '',
   errorMessage: [],
 };
 
 const userReducer = (state = initialState, action) => {
   switch (action.type) {
-    case 'LOGIN':
+    case SET_USER:
       return {
         ...state,
+        id: action.payload.id,
         email: action.payload.email,
         role: action.payload.role,
         accessToken: action.payload.accessToken,
-        isAuth: true,
       };
-    case 'REGISTER':
+    case REFRESH_TOKEN:
       return {
         ...state,
-        email: action.payload.email,
-        role: action.payload.role,
-        accessToken: action.payload.accessToken,
-        isAuth: true,
+        accessToken: action.payload,
       };
-    case 'LOGOUT':
+    case LOGOUT:
       return {
         ...state,
+        id: '',
+        email: '',
+        role: '',
+        accessToken: '',
       };
-    case 'ERROR':
+    case USER_MESSAGE:
       return {
         ...state,
         errorMessage: action.payload,
