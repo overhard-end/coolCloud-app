@@ -1,7 +1,7 @@
 import fileService from '../../services/fileService';
 import { SET_FILES, SELECT_FILE, RETURN_FILE } from '../actions/types';
 import store from '../store';
-
+import { Http } from '../../api/api';
 export function fetchFiles() {
   return async (dispatch) => {
     try {
@@ -17,20 +17,60 @@ export function fetchFiles() {
 
 export function uploadFile(files) {
   return async (dispatch) => {
+    const reader = new FileReader();
+
+    const chunkSize = 10 * 1024; // 10kb
+    const selectedFile = store.getState().filesReducer.selectedFile;
+
+    let fileIndex = null;
+    let currentChunkIndex = null;
+
     try {
-      const formData = new FormData();
-      const currentFile = store.getState().folderReducer.selectedFile;
-      for (let i = 0; i < files.length; i++) {
-        let relativePath = files[i].webkitRelativePath;
-        if (!relativePath) {
-          relativePath = `${currentFile.path}/${files[i].name}`;
-        }
-        formData.append('files', files[i]);
-        formData.append('relativePath', relativePath);
+      function readAndUploadFile() {
+        const file = files[fileIndex];
+        const chunkStart = currentChunkIndex * chunkSize;
+        const slicedBlob = file.slice(chunkStart, chunkStart + chunkSize);
+
+        reader.readAsDataURL(slicedBlob);
+
+        reader.onload = (e) => uploadCurrentChunk(e.target.result);
       }
-      const response = await fileService.addFiles(formData);
-      if (response.status === 200) {
-        return dispatch(fetchFiles(currentFile));
+
+      async function uploadCurrentChunk(chunk) {
+        const file = files[fileIndex];
+        const currentDir = selectedFile.path ? selectedFile.path : '';
+        const webkitDir = file.webkitRelativePath ? '/' + file.webkitRelativePath : '';
+
+        const relativePath = currentDir + webkitDir;
+        console.log(relativePath);
+
+        const totalChunks = Math.ceil(file.size / chunkSize) - 1;
+        const params = new URLSearchParams();
+
+        params.set('fileName', file.name);
+        params.set('relativePath', relativePath);
+
+        params.set('totalChunks', totalChunks);
+        params.set('currentChunkIndex', currentChunkIndex);
+        const headers = { 'content-type': 'application/octet-stream' };
+
+        await new Http({ withAuth: true })
+          .post('files?' + params, chunk, { headers })
+          .then((res) => {
+            if (totalChunks === currentChunkIndex) {
+              if (files.length === fileIndex + 1) return console.log('All files was uploaded');
+              currentChunkIndex = 0;
+              fileIndex++;
+              return readAndUploadFile();
+            }
+            currentChunkIndex++;
+            readAndUploadFile();
+          });
+      }
+      if (fileIndex === null && currentChunkIndex === null) {
+        fileIndex = 0;
+        currentChunkIndex = 0;
+        readAndUploadFile();
       }
     } catch (error) {
       console.log(error);
@@ -61,5 +101,5 @@ export const selectFile = (file) => (dispatch) => {
 };
 
 export const returnFile = () => (dispatch) => {
-  dispatch({ typy: RETURN_FILE });
+  dispatch({ type: RETURN_FILE });
 };

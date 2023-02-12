@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 import { formatSizeUnits } from '../utils/sizeFormat';
 
 export const FilesProgresUI = () => {
-  const files = useSelector((state) => state.filesReducer);
+  const files = useSelector((state) => state.filesReducer.files);
   const sizeHumanFormat = formatSizeUnits(files.size);
   const maxSizeHumanFormat = formatSizeUnits(files.maxSize);
   return (

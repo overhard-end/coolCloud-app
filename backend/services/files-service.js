@@ -1,7 +1,7 @@
 const dirTree = require('directory-tree'); //library for get files structure from storage directory
 
 class FileService {
-  getfilesTree(storagePath) {
+  getfilesTree(storagePath, userId) {
     const resuts = dirTree(
       storagePath,
       {
@@ -10,11 +10,14 @@ class FileService {
       },
       null,
       (item, path, stats) => {
-        let newPath = path.split('root').pop();
+        let pathSplit = path.split(`${userId}`);
+        let newPath = pathSplit.pop();
         item.path = newPath;
+
         for (let i = 0; i < item.children.length; i++) {
-          let newPath = item.children[i].path.split('root').pop();
-          item.children[i].path = newPath;
+          let childrenPath = item.children[i].path;
+          let newChildrenPath = childrenPath.split(`${userId}`).pop();
+          item.children[i].path = newChildrenPath;
         }
       },
     );

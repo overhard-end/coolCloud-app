@@ -1,4 +1,4 @@
-import { ArrowBack, CheckBox, PhotoCamera } from '@mui/icons-material';
+import { ArrowBack, PhotoCamera } from '@mui/icons-material';
 import {
   Alert,
   AppBar,
@@ -14,15 +14,15 @@ import {
   Typography,
 } from '@mui/material';
 
-import React from 'react';
-import { useSelector } from 'react-redux';
+import React, { useContext } from 'react';
+
 import { Link } from 'react-router-dom';
+import { UserContext } from '..';
 
 import { ProfileMenu } from '../components/ProfileMenu';
 
 export const Profile = () => {
-  const user = useSelector((state) => state.userReducer);
-
+  const { user } = useContext(UserContext);
   return (
     <>
       <AppBar>
@@ -43,10 +43,7 @@ export const Profile = () => {
       </AppBar>
       <Container maxWidth="md" sx={{ marginTop: '100px' }}>
         <Box display="flex" marginBottom="20px" position={'relative'}>
-          <Avatar
-            src="https://avatars.githubusercontent.com/u/76556579?s=400&u=57715db8888294fc30e2e355c32a048e8a167c5c&v=4"
-            sx={{ width: 150, height: 150 }}
-          />
+          <Avatar src={user.image} sx={{ width: 150, height: 150 }} />
           <IconButton
             disableRipple={true}
             sx={{
@@ -65,7 +62,7 @@ export const Profile = () => {
             <Typography fontSize="20px" variant="overline">
               Email: {user.email}
             </Typography>
-            {!user.confirEmail ? (
+            {user.isConfirmed ? (
               <Alert severity="success">Email successfuly confirm</Alert>
             ) : (
               <Alert severity="error">

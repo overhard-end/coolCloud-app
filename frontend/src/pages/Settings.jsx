@@ -3,7 +3,6 @@ import {
   AppBar,
   Box,
   Button,
-  ButtonGroup,
   Container,
   Divider,
   IconButton,
@@ -13,14 +12,11 @@ import {
 } from '@mui/material';
 
 import React from 'react';
-import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { FilesProgresUI } from '../components/FilesProgresUI';
 import { ProfileMenu } from '../components/ProfileMenu';
 
 export const Settings = () => {
-  const user = useSelector((state) => state.userReducer);
-
   return (
     <>
       <AppBar>

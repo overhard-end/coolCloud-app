@@ -1,5 +1,5 @@
 const Token = require('../utils/token');
-const accessKey = process.env.JWT_ACCESS_TOKEN_KEY;
+const accessKey = process.env.USERFRONT_JWT_PUBLIC_KEY;
 
 function accessTokenCheck(req, res, next) {
   try {
@@ -7,12 +7,9 @@ function accessTokenCheck(req, res, next) {
 
     const token = authHeader && authHeader.split(' ')[1];
     if (!token) return res.sendStatus(401);
-
-    const check = Token.checkToken(token, accessKey);
+    const check = Token.checkToken(token, accessKey, { algorithms: ['RS256'] });
     if (!check?.valid) return res.sendStatus(401);
-
-    const email = check.decoded.email;
-    req.body.email = email;
+    req.session = check.decoded;
     next();
   } catch (error) {
     console.log(error);

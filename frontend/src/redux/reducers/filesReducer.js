@@ -19,6 +19,7 @@ const filesReducer = (state = initialState, action) => {
         size: action.payload.size,
         maxSize: action.payload.maxSize,
         fileStack: [action.payload],
+
         isLoading: false,
       };
 

@@ -12,17 +12,24 @@ import {
   ListItemText,
   Typography,
 } from '@mui/material';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { FileItem } from '../components/FileItem';
-import { connect } from 'react-redux';
-import { returnFile } from '../redux/actions/filesActions';
+
+import { fetchFiles, returnFile } from '../redux/actions/filesActions';
 import Header from '../components/Header';
 import { SideBar } from '../components/SideBar';
 import { FilesProgresUI } from '../components/FilesProgresUI';
-import { useDispatch } from 'react-redux';
-const FileList = ({ isLoading, fileStack, selectedFile }) => {
+import { useDispatch, useSelector } from 'react-redux';
+
+export const FileList = () => {
   const dispatch = useDispatch();
+  const fileStore = useSelector((state) => state.filesReducer);
+  const { isLoading, fileStack, selectedFile } = fileStore;
+
   const selectedFilePath = fileStack[fileStack.length - 1]?.path.split('/');
+  useEffect(() => {
+    dispatch(fetchFiles());
+  }, [dispatch]);
 
   return (
     <>
@@ -63,7 +70,7 @@ const FileList = ({ isLoading, fileStack, selectedFile }) => {
                             padding: 0,
                             color: 'grey',
                           }}>
-                          <Typography variant="caption"> {`${path}/`} </Typography>
+                          <Typography variant="caption"> {`${path ? path : ''}/`} </Typography>
                         </ListItemButton>
                       </>
                     </Box>
@@ -99,12 +106,3 @@ const FileList = ({ isLoading, fileStack, selectedFile }) => {
     </>
   );
 };
-
-const mapStateToProps = (state) => ({
-  selectedFile: state.filesReducer.selectedFile,
-  fileStack: state.filesReducer.fileStack,
-  isLoading: state.filesReducer.isLoading,
-  files: state.filesReducer.files,
-});
-
-export default connect(mapStateToProps)(FileList);

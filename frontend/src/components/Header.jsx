@@ -5,7 +5,7 @@ import { SearchField } from './SearchField';
 import { ProfileMenu } from './ProfileMenu';
 import { AppIcon } from './AppIcon';
 
-export default function Header({}) {
+export default function Header() {
   return (
     <AppBar position="fixed" color="primary" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
       <Toolbar sx={{ display: 'flex', justifyContent: 'right' }}>

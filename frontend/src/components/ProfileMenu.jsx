@@ -1,13 +1,11 @@
 import { AccountCircle, Settings } from '@mui/icons-material';
 import { Avatar, IconButton, Menu, MenuItem, Typography } from '@mui/material';
-import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import React, { useContext, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { logout } from '../redux/actions/userAction';
+import { UserContext } from '..';
 
 export const ProfileMenu = () => {
-  const userEmail = useSelector((state) => state.userReducer.email);
-  const dispatch = useDispatch();
+  const { user, logout } = useContext(UserContext);
   const [anchorEl, setAchorEl] = useState(null);
   const [open, setOpen] = useState(false);
 
@@ -19,9 +17,9 @@ export const ProfileMenu = () => {
   return (
     <>
       <IconButton onClick={(e) => openProfileMenu(e)} aria-controls="profileMenu">
-        <Avatar src="https://avatars.githubusercontent.com/u/76556579?s=400&u=57715db8888294fc30e2e355c32a048e8a167c5c&v=4" />
+        <Avatar src={user.image} />
         <Typography ml="10px" color="white" variant="button">
-          {userEmail}
+          {user.email}
         </Typography>
       </IconButton>
       <Menu onClose={() => setOpen(false)} anchorEl={anchorEl} id="profileMenu" open={open}>
@@ -37,7 +35,7 @@ export const ProfileMenu = () => {
             Настройки
           </MenuItem>
         </Link>
-        <MenuItem onClick={() => dispatch(logout())}>
+        <MenuItem onClick={() => logout()}>
           <Settings />
           Выход
         </MenuItem>

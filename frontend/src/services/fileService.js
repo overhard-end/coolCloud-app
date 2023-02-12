@@ -4,8 +4,8 @@ class FileService {
   async getFiles() {
     return await new Http({ withAuth: true }).get('/files');
   }
-  async addFiles(files) {
-    return await new Http({ withAuth: true }).post('/files', files);
+  async addFiles(file, headers) {
+    return await new Http({ withAuth: true }).post('/files', file, { headers });
   }
   async removeFiles(files) {
     return await new Http({ withAuth: true }).post('/removeFile', files);

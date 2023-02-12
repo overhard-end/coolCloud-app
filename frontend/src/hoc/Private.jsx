@@ -1,10 +1,10 @@
 import { Navigate, Outlet } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { UserContext } from '..';
+import { useContext } from 'react';
 
 const Private = ({ children }) => {
-  const accessToken = useSelector((state) => state.userReducer.accessToken);
-
-  if (!accessToken) return <Navigate to="/login" replace />;
+  const user = useContext(UserContext);
+  if (!user.tokens.accessToken) return <Navigate to="/sign-up" replace />;
 
   return children ? children : <Outlet />;
 };
