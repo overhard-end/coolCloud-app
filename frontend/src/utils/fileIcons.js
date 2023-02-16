@@ -12,8 +12,11 @@ import {
   Settings,
   TextSnippet,
   PictureAsPdf,
+  QuestionMark,
 } from '@mui/icons-material';
-export const fileIcon = (extension) => {
+export const fileIcon = (extension, type) => {
+  if (type !== 'file') return <Folder />;
+
   switch (extension) {
     case '.pdf':
       return <PictureAsPdf />;
@@ -48,6 +51,6 @@ export const fileIcon = (extension) => {
     case '.m4a':
       return <MusicNote />;
     default:
-      return <Folder />;
+      return <QuestionMark />;
   }
 };

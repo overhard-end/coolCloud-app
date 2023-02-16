@@ -1,5 +1,12 @@
+body {
+  margin: 0;
+}
+a {
+  text-decoration: none;
+}
 .App {
   text-align: center;
+  margin-top: 100px;
 }
 .AppHeader {
   padding-left: 240px;

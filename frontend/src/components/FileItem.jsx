@@ -28,11 +28,8 @@ export const FileItem = ({ file, dispatch }) => {
       <ListItemButton
         onClick={() => dispatch(selectFile(file))}
         onContextMenu={(e) => handleOpenContextMenu(e)}
-        disableGutters={true}
-        divider={true}
-        dense={true}
-        sx={{ marginRight: '70px' }}>
-        <ListItemIcon>{fileIcon(file.extension)}</ListItemIcon>
+        divider={true}>
+        <ListItemIcon>{fileIcon(file.extension, file.type)}</ListItemIcon>
         <ListItemText
           primary={file.name}
           sx={{ width: '80px' }}

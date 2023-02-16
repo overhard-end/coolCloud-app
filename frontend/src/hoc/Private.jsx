@@ -4,7 +4,7 @@ import { useContext } from 'react';
 
 const Private = ({ children }) => {
   const user = useContext(UserContext);
-  if (!user.tokens.accessToken) return <Navigate to="/sign-up" replace />;
+  if (!user.tokens.accessToken) return <Navigate to="/auth" replace />;
 
   return children ? children : <Outlet />;
 };

@@ -10,9 +10,7 @@ export const FilesProgresUI = () => {
   return (
     <Box sx={{}}>
       <LinearProgress variant="determinate" value={(files.size / files.maxSize) * 100} />
-      <Typography variant="outlined">
-        {`Использовано ${sizeHumanFormat}  из ${maxSizeHumanFormat}`}
-      </Typography>
+      <Typography>{`Использовано ${sizeHumanFormat}  из ${maxSizeHumanFormat}`}</Typography>
     </Box>
   );
 };

@@ -12,36 +12,34 @@ import {
   ListItemText,
   Typography,
 } from '@mui/material';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FileItem } from '../components/FileItem';
 
-import { fetchFiles, returnFile } from '../redux/actions/filesActions';
+import { fetchFiles, returnFile, uploadFile } from '../redux/actions/filesActions';
 import Header from '../components/Header';
 import { SideBar } from '../components/SideBar';
 import { FilesProgresUI } from '../components/FilesProgresUI';
 import { useDispatch, useSelector } from 'react-redux';
+import { FileUploadProgress } from '../components/FileUploadProgress';
 
 export const FileList = () => {
   const dispatch = useDispatch();
   const fileStore = useSelector((state) => state.filesReducer);
   const { isLoading, fileStack, selectedFile } = fileStore;
-
   const selectedFilePath = fileStack[fileStack.length - 1]?.path.split('/');
   useEffect(() => {
     dispatch(fetchFiles());
-  }, [dispatch]);
+  }, []);
 
   return (
     <>
       <Header />
       <SideBar />
-      <Container
-        disableGutters={true}
-        maxWidth="70%"
-        sx={{ paddingLeft: '240px', paddingTop: '100px' }}>
+      <Container sx={{ paddingLeft: '240px' }} maxWidth="lg" disableGutters={true}>
         <Box sx={{ display: 'flex', justifyContent: 'center' }}>
           <FilesProgresUI />
         </Box>
+        <FileUploadProgress />
         <Box
           sx={{
             display: 'flex',
@@ -86,9 +84,11 @@ export const FileList = () => {
 
               <ListItemText sx={{ padding: '0 10px', textAlign: 'right' }} secondary="Размер" />
             </ListItem>
+
             <Divider />
           </Box>
         </Box>
+
         {isLoading ? (
           <CircularProgress />
         ) : (

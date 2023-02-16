@@ -17,39 +17,46 @@ export function fetchFiles() {
 
 export function uploadFile(files) {
   return async (dispatch) => {
+    dispatch({ type: 'UPLOAD_START', payload: files });
     const reader = new FileReader();
 
     const chunkSize = 10 * 1024; // 10kb
     const selectedFile = store.getState().filesReducer.selectedFile;
 
-    let fileIndex = null;
+    let currentFileIndex = null;
     let currentChunkIndex = null;
 
     try {
       function readAndUploadFile() {
-        const file = files[fileIndex];
+        const filesForUploading = store.getState().filesReducer.uploadFile.files;
+        const file = filesForUploading[currentFileIndex];
+        if (!file) {
+          dispatch({ type: 'UPLOAD_DONE' });
+          return dispatch(fetchFiles());
+        }
         const chunkStart = currentChunkIndex * chunkSize;
         const slicedBlob = file.slice(chunkStart, chunkStart + chunkSize);
 
         reader.readAsDataURL(slicedBlob);
 
-        reader.onload = (e) => uploadCurrentChunk(e.target.result);
+        reader.onload = (e) => uploadCurrentChunk(e.target.result, file);
       }
 
-      async function uploadCurrentChunk(chunk) {
-        const file = files[fileIndex];
+      async function uploadCurrentChunk(chunk, file) {
         const currentDir = selectedFile.path ? selectedFile.path : '';
-        const webkitDir = file.webkitRelativePath ? '/' + file.webkitRelativePath : '';
+        let relatedFilePath = file?.webkitRelativePath.split('/');
+        if (relatedFilePath) {
+          relatedFilePath.pop();
+          relatedFilePath.join('/');
+        }
 
-        const relativePath = currentDir + webkitDir;
-        console.log(relativePath);
+        const relativePath = currentDir + relatedFilePath;
 
         const totalChunks = Math.ceil(file.size / chunkSize) - 1;
         const params = new URLSearchParams();
 
         params.set('fileName', file.name);
         params.set('relativePath', relativePath);
-
         params.set('totalChunks', totalChunks);
         params.set('currentChunkIndex', currentChunkIndex);
         const headers = { 'content-type': 'application/octet-stream' };
@@ -57,23 +64,31 @@ export function uploadFile(files) {
         await new Http({ withAuth: true })
           .post('files?' + params, chunk, { headers })
           .then((res) => {
+            dispatch({
+              type: 'UPLOAD_PROGRESS',
+              payload: {
+                file,
+                totalChunks,
+                currentChunkIndex,
+              },
+            });
             if (totalChunks === currentChunkIndex) {
-              if (files.length === fileIndex + 1) return console.log('All files was uploaded');
               currentChunkIndex = 0;
-              fileIndex++;
+              currentFileIndex++;
+
               return readAndUploadFile();
             }
             currentChunkIndex++;
             readAndUploadFile();
           });
       }
-      if (fileIndex === null && currentChunkIndex === null) {
-        fileIndex = 0;
+      if (currentFileIndex === null && currentChunkIndex === null) {
+        currentFileIndex = 0;
         currentChunkIndex = 0;
         readAndUploadFile();
       }
     } catch (error) {
-      console.log(error);
+      alert('Something went wrong, please');
     }
   };
 }

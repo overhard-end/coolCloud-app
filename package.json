@@ -8,6 +8,7 @@
     "concurrently": "^7.4.0"
   },
   "dependencies": {
+    "react-dropzone": "^14.2.3",
     "socket.io-client": "^4.5.4"
   }
 }

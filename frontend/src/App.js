@@ -10,8 +10,7 @@ import Private from './hoc/Private';
 import './App.css';
 import Public from './hoc/Public';
 
-import { SignIn } from './pages/SignIn';
-import { SignUp } from './pages/SignUp';
+import { AuthPage } from './pages/AuthPage';
 
 export const App = () => {
   return (
@@ -24,8 +23,7 @@ export const App = () => {
             <Route path="/profile" element={<Profile />} />
           </Route>
           <Route element={<Public />}>
-            <Route path="/sign-in" element={<SignIn />}></Route>
-            <Route path="/sign-up" element={<SignUp />}></Route>
+            <Route path="/auth/*" element={<AuthPage />}></Route>
           </Route>
         </Routes>
       </>

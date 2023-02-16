@@ -26,7 +26,6 @@ export const SideBar = () => {
       variant="permanent"
       sx={{
         width: '240px',
-
         [`& .MuiDrawer-paper`]: { width: '240px', boxSizing: 'border-box', paddingTop: '100px' },
       }}>
       <List>

@@ -21,13 +21,10 @@ class FilesController {
 
   async saveFiles(req, res, next) {
     const userId = req.session.userUuid;
-    const removeFilePart = (dirname) => path.parse(dirname).dir;
+
     const { fileName, totalChunks, currentChunkIndex, relativePath } = req.query;
-    const relativeDir = removeFilePart(relativePath);
-    const destinationPath = path.join(
-      __dirname,
-      `../uploads/root/${userId}${relativeDir ? '/' + relativeDir : ''}`,
-    );
+
+    const destinationPath = path.join(__dirname, `../uploads/root/`, userId, relativePath);
 
     console.log(destinationPath);
     const data = req.body.toString();

@@ -7,6 +7,13 @@ const initialState = {
   size: 0,
   maxSize: 0,
   isLoading: true,
+  uploadFile: {
+    files: [],
+    currentFile: {},
+    chunks: null,
+    currentChunk: null,
+    uploadedFiles: [],
+  },
 };
 
 const filesReducer = (state = initialState, action) => {
@@ -19,7 +26,6 @@ const filesReducer = (state = initialState, action) => {
         size: action.payload.size,
         maxSize: action.payload.maxSize,
         fileStack: [action.payload],
-
         isLoading: false,
       };
 
@@ -42,6 +48,50 @@ const filesReducer = (state = initialState, action) => {
         ...state,
         fileStack: fileStackPop,
         selectedFile: state.fileStack.at(-1),
+      };
+    case 'UPLOAD_START':
+      return {
+        ...state,
+        uploadFile: {
+          ...state.uploadFile,
+          files: [...action.payload],
+        },
+      };
+    case 'UPLOAD_CHANGE':
+      return {
+        ...state,
+        uploadFile: {
+          ...state.uploadFile,
+          files: [...action.payload],
+        },
+      };
+    case 'UPLOAD_PROGRESS':
+      let file;
+      if (action.payload.totalChunks === action.payload.currentChunkIndex) {
+        file = action.payload.file;
+      }
+      return {
+        ...state,
+        uploadFile: {
+          ...state.uploadFile,
+          currentFile: action.payload.file,
+          chunks: action.payload.totalChunks,
+          currentChunk: action.payload.currentChunkIndex,
+          uploadedFiles: file
+            ? [...state.uploadFile.uploadedFiles, file.name]
+            : state.uploadFile.uploadedFiles,
+        },
+      };
+    case 'UPLOAD_DONE':
+      return {
+        ...state,
+        uploadFile: {
+          files: [],
+          currentFile: {},
+          chunks: 0,
+          currentChunk: 0,
+          uploadedFiles: [],
+        },
       };
 
     default:
