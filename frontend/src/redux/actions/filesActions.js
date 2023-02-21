@@ -2,6 +2,7 @@ import fileService from '../../services/fileService';
 import { SET_FILES, SELECT_FILE, RETURN_FILE } from '../actions/types';
 import store from '../store';
 import { Http } from '../../api/api';
+
 export function fetchFiles() {
   return async (dispatch) => {
     try {
@@ -17,7 +18,32 @@ export function fetchFiles() {
 
 export function uploadFile(files) {
   return async (dispatch) => {
-    dispatch({ type: 'UPLOAD_START', payload: files });
+    const originalFileList = [...files];
+    const chekingFileName = originalFileList[0].name;
+    const checkFileExists = await new Http({ withAuth: true }).post('/filesCheck', {
+      fileName: chekingFileName,
+    });
+    if (checkFileExists.status === 409) return dispatch({ type: 'UPLOAD_DONE' });
+
+    let filesArray = [];
+    for (let i = 0; i < originalFileList.length; i++) {
+      let fileObject = {
+        name: files[i].name,
+        size: files[i].size,
+        type: files[i].type,
+        relativePath: files[i].webkitRelativePath,
+      };
+      filesArray.push(fileObject);
+    }
+    const worker = new Worker(new URL('../../longProcesses/hashFile.js', import.meta.url));
+    worker.postMessage(originalFileList[0]);
+
+    worker.onmessage = (e) => {
+      console.log(e.data);
+    };
+    return;
+    dispatch({ type: 'UPLOAD_START', payload: filesArray });
+
     const reader = new FileReader();
 
     const chunkSize = 10 * 1024; // 10kb
@@ -27,18 +53,23 @@ export function uploadFile(files) {
     let currentChunkIndex = null;
 
     try {
-      function readAndUploadFile() {
-        const filesForUploading = store.getState().filesReducer.uploadFile.files;
-        const file = filesForUploading[currentFileIndex];
+      function readAndUploadCurrentFile() {
+        const filesPresentation = store.getState().filesReducer.uploadFile.files;
+
+        const fileListForUploading = originalFileList.filter((originalFile) =>
+          filesPresentation.some((file) => originalFile.name === file.name),
+        );
+        const file = fileListForUploading[currentFileIndex];
+
         if (!file) {
           dispatch({ type: 'UPLOAD_DONE' });
           return dispatch(fetchFiles());
         }
-        const chunkStart = currentChunkIndex * chunkSize;
-        const slicedBlob = file.slice(chunkStart, chunkStart + chunkSize);
+
+        const chunkStartPoint = currentChunkIndex * chunkSize;
+        const slicedBlob = file.slice(chunkStartPoint, chunkStartPoint + chunkSize);
 
         reader.readAsDataURL(slicedBlob);
-
         reader.onload = (e) => uploadCurrentChunk(e.target.result, file);
       }
 
@@ -67,27 +98,29 @@ export function uploadFile(files) {
             dispatch({
               type: 'UPLOAD_PROGRESS',
               payload: {
-                file,
                 totalChunks,
                 currentChunkIndex,
+                currentUploadingFile: { name: file.name, size: file.size },
               },
             });
+
             if (totalChunks === currentChunkIndex) {
               currentChunkIndex = 0;
               currentFileIndex++;
-
-              return readAndUploadFile();
+              return readAndUploadCurrentFile();
             }
+
             currentChunkIndex++;
-            readAndUploadFile();
+            readAndUploadCurrentFile();
           });
       }
       if (currentFileIndex === null && currentChunkIndex === null) {
         currentFileIndex = 0;
         currentChunkIndex = 0;
-        readAndUploadFile();
+        readAndUploadCurrentFile();
       }
     } catch (error) {
+      console.log(error);
       alert('Something went wrong, please');
     }
   };

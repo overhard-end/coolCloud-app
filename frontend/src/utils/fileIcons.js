@@ -15,7 +15,7 @@ import {
   QuestionMark,
 } from '@mui/icons-material';
 export const fileIcon = (extension, type) => {
-  if (type !== 'file') return <Folder />;
+  if (type && type !== 'file') return <Folder />;
 
   switch (extension) {
     case '.pdf':
