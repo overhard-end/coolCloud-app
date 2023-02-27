@@ -1,17 +1,16 @@
-import md5 from 'md5';
+import SparkMD5 from 'spark-md5';
 
+const spark = new SparkMD5();
 self.onmessage = (e) => {
-  const file = e.data;
+  const chunkList = e.data;
 
-  const reader = new FileReader();
-  reader.readAsDataURL(file);
-  reader.onload = (e) => {
-    const buffer = e.target.result;
-    console.log(buffer);
-    const hash = md5(buffer);
-    self.postMessage(hash);
-    self.close();
-  };
+  chunkList.forEach((chunk) => {
+    spark.append(chunk);
+  });
+
+  const hash = spark.end();
+  self.postMessage(hash);
+  self.close();
 };
 
 export {};

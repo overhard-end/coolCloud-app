@@ -1,14 +1,13 @@
 const path = require('path');
 const fs = require('fs');
 const filesService = require('../services/files-service');
-const md5 = require('md5');
+const busboy = require('busboy');
 const UPLOAD_DIR = path.join(__dirname, '../uploads/root');
 class FilesController {
   async checkFileExists(req, res) {
     const userId = req.session.userUuid;
     const { fileName } = req.body;
     const checkingFilePath = path.join(UPLOAD_DIR, userId, fileName);
-    console.log(checkingFilePath);
     const fileExists = fs.existsSync(checkingFilePath);
     if (fileExists) return res.status(409).json({ message: 'file already exists' });
     res.json({ message: 'ready for upload' });
@@ -30,38 +29,59 @@ class FilesController {
 
   async saveFiles(req, res, next) {
     try {
+      const bb = busboy({ headers: req.headers });
       const userId = req.session.userUuid;
+      const destinationPath = path.join(__dirname, `../uploads/root/`, userId);
+      const getChunkDir = (fileHash) => path.resolve(destinationPath, `chunkDir_${fileHash}`);
+      bb.on('file', (name, file, info) => {
+        const fileHash = name.split('-')[0];
+        const chunkDir = getChunkDir(fileHash);
+        if (!fs.existsSync(chunkDir)) {
+          fs.mkdirSync(chunkDir);
+        }
+        file.pipe(fs.createWriteStream(path.resolve(chunkDir, name)));
+      });
+      bb.on('close', () => console.log('current chunk was uploaded'), res.json('ok'));
+      req.pipe(bb);
 
-      const { fileName, totalChunks, currentChunkIndex, relativePath } = req.query;
+      // const hash = Object.keys(files)[0].split('-')[0];
+      // const file = files[hash + '-' + count];
 
-      const destinationPath = path.join(__dirname, `../uploads/root/`, userId, relativePath);
-      const chunkIndex = parseInt(currentChunkIndex);
-      console.log(chunkIndex);
-      const totalChunkIndex = parseInt(totalChunks);
-      const data = req.body.toString();
-      const chunk = data.split(',').pop();
-      const buffer = new Buffer.from(chunk, 'base64');
-      const fileExt = fileName.split('.').pop();
-      const tmpFileName = md5(fileName) + '.' + fileExt;
+      // const chunkDir = getChunkDir(hash);
+      // if (!fs.existsSync(chunkDir)) {
+      //   fs.mkdirSync(chunkDir);
+      // }
+      // fs.renameSync(file.filepath, path.resolve(chunkDir, `${hash}-${count}`));
+      // count++;
+      // res.json(file);
 
-      const isFirstChunk = chunkIndex === 0;
-      const isFileExists = fs.existsSync(destinationPath + '/' + fileName);
-      const isDirExists = fs.existsSync(destinationPath);
-      const isNextFile = chunkIndex !== totalChunkIndex;
+      // const chunkIndex = parseInt(currentChunkIndex);
+      // console.log(chunkIndex);
+      // const totalChunkIndex = parseInt(totalChunks);
+      // const data = req.body.toString();
+      // const chunk = data.split(',').pop();
+      // const buffer = new Buffer.from(chunk, 'base64');
+      // const fileExt = fileName.split('.').pop();
+      // const tmpFileName = md5(fileName) + '.' + fileExt;
 
-      if (isFirstChunk && isFileExists) {
-        fs.unlinkSync(destinationPath + '/' + fileName);
-      }
-      if (!isDirExists) {
-        fs.mkdirSync(destinationPath);
-      }
-      fs.appendFileSync(destinationPath + '/' + tmpFileName, buffer);
-      if (totalChunks !== currentChunkIndex) {
-        return res.json('Chunk number ' + currentChunkIndex + ' from ' + fileName + ' was saved');
-      }
+      // const isFirstChunk = chunkIndex === 0;
+      // const isFileExists = fs.existsSync(destinationPath + '/' + fileName);
+      // const isDirExists = fs.existsSync(destinationPath);
+      // const isNextFile = chunkIndex !== totalChunkIndex;
 
-      fs.renameSync(destinationPath + '/' + tmpFileName, destinationPath + '/' + fileName);
-      res.status(201).json('File ' + fileName + ' was successfully saved');
+      // if (isFirstChunk && isFileExists) {
+      //   fs.unlinkSync(destinationPath + '/' + fileName);
+      // }
+      // if (!isDirExists) {
+      //   fs.mkdirSync(destinationPath);
+      // }
+      // fs.appendFileSync(destinationPath + '/' + tmpFileName, buffer);
+      // if (totalChunks !== currentChunkIndex) {
+      //   return res.json('Chunk number ' + currentChunkIndex + ' from ' + fileName + ' was saved');
+      // }
+
+      // fs.renameSync(destinationPath + '/' + tmpFileName, destinationPath + '/' + fileName);
+      // res.status(201).json('File ' + fileName + ' was successfully saved');
     } catch (error) {
       console.error(error);
       res.sendStatus(500);

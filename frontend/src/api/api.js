@@ -17,6 +17,19 @@ export class Http {
         request.headers['Authorization'] = 'Bearer ' + accessToken;
         return request;
       });
+      this.instance.interceptors.response.use(
+        function (response) {
+          return response;
+        },
+        async function (error) {
+          const originalRequest = error.config;
+          if (error.response.status === 401 && !originalRequest._retry) {
+            originalRequest._retry = true;
+            await UserFront.tokens.refresh();
+            return this.instance(originalRequest);
+          }
+        },
+      );
     }
 
     return this.instance;

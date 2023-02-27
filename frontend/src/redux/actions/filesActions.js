@@ -1,7 +1,6 @@
 import fileService from '../../services/fileService';
 import { SET_FILES, SELECT_FILE, RETURN_FILE } from '../actions/types';
 import store from '../store';
-import { Http } from '../../api/api';
 
 export function fetchFiles() {
   return async (dispatch) => {
@@ -19,11 +18,6 @@ export function fetchFiles() {
 export function uploadFile(files) {
   return async (dispatch) => {
     const originalFileList = [...files];
-    const chekingFileName = originalFileList[0].name;
-    const checkFileExists = await new Http({ withAuth: true }).post('/filesCheck', {
-      fileName: chekingFileName,
-    });
-    if (checkFileExists.status === 409) return dispatch({ type: 'UPLOAD_DONE' });
 
     let filesArray = [];
     for (let i = 0; i < originalFileList.length; i++) {
@@ -35,25 +29,15 @@ export function uploadFile(files) {
       };
       filesArray.push(fileObject);
     }
-    const worker = new Worker(new URL('../../longProcesses/hashFile.js', import.meta.url));
-    worker.postMessage(originalFileList[0]);
 
-    worker.onmessage = (e) => {
-      console.log(e.data);
-    };
-    return;
     dispatch({ type: 'UPLOAD_START', payload: filesArray });
-
-    const reader = new FileReader();
-
-    const chunkSize = 10 * 1024; // 10kb
-    const selectedFile = store.getState().filesReducer.selectedFile;
 
     let currentFileIndex = null;
     let currentChunkIndex = null;
 
     try {
-      function readAndUploadCurrentFile() {
+      async function readAndUploadFile() {
+        // const selectedFile = store.getState().filesReducer.selectedFile;
         const filesPresentation = store.getState().filesReducer.uploadFile.files;
 
         const fileListForUploading = originalFileList.filter((originalFile) =>
@@ -65,59 +49,29 @@ export function uploadFile(files) {
           dispatch({ type: 'UPLOAD_DONE' });
           return dispatch(fetchFiles());
         }
-
-        const chunkStartPoint = currentChunkIndex * chunkSize;
-        const slicedBlob = file.slice(chunkStartPoint, chunkStartPoint + chunkSize);
-
-        reader.readAsDataURL(slicedBlob);
-        reader.onload = (e) => uploadCurrentChunk(e.target.result, file);
+        const chunkList = fileService.createFileChunk(file);
+        console.log(chunkList);
+        const fileHash = await fileService.ganerateHash(chunkList);
+        console.log(fileHash);
+        const formData = new FormData();
+        let allPromises = chunkList.map((chunk, index) => {
+          formData.append(fileHash + '-' + index, chunk);
+          return fileService.sendChunk(formData);
+        });
+        Promise.all(allPromises)
+          .then((responses) => {
+            fileService
+              .mergeChunks()
+              .then(currentFileIndex++)
+              .catch((error) => console.log(error));
+          })
+          .catch(dispatch({ type: 'UPLOAD_DONE' }));
       }
 
-      async function uploadCurrentChunk(chunk, file) {
-        const currentDir = selectedFile.path ? selectedFile.path : '';
-        let relatedFilePath = file?.webkitRelativePath.split('/');
-        if (relatedFilePath) {
-          relatedFilePath.pop();
-          relatedFilePath.join('/');
-        }
-
-        const relativePath = currentDir + relatedFilePath;
-
-        const totalChunks = Math.ceil(file.size / chunkSize) - 1;
-        const params = new URLSearchParams();
-
-        params.set('fileName', file.name);
-        params.set('relativePath', relativePath);
-        params.set('totalChunks', totalChunks);
-        params.set('currentChunkIndex', currentChunkIndex);
-        const headers = { 'content-type': 'application/octet-stream' };
-
-        await new Http({ withAuth: true })
-          .post('files?' + params, chunk, { headers })
-          .then((res) => {
-            dispatch({
-              type: 'UPLOAD_PROGRESS',
-              payload: {
-                totalChunks,
-                currentChunkIndex,
-                currentUploadingFile: { name: file.name, size: file.size },
-              },
-            });
-
-            if (totalChunks === currentChunkIndex) {
-              currentChunkIndex = 0;
-              currentFileIndex++;
-              return readAndUploadCurrentFile();
-            }
-
-            currentChunkIndex++;
-            readAndUploadCurrentFile();
-          });
-      }
       if (currentFileIndex === null && currentChunkIndex === null) {
         currentFileIndex = 0;
         currentChunkIndex = 0;
-        readAndUploadCurrentFile();
+        readAndUploadFile();
       }
     } catch (error) {
       console.log(error);
