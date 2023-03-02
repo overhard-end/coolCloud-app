@@ -1,9 +1,17 @@
 import { Http } from '../api/api';
+import store from '../redux/store';
 
 class FileService {
   chunkSize = 5 * 1024 * 1024; // 5mb
   async getFiles() {
-    return await new Http({ withAuth: true }).get('/files');
+    return new Promise(async (resolve, reject) => {
+      await new Http({ withAuth: true })
+        .get('/files')
+        .then((res) => {
+          if (res.status === 200) return resolve(res);
+        })
+        .catch((error) => reject(error));
+    });
   }
   async addFiles(file, headers) {
     return await new Http({ withAuth: true }).post('/files', file, { headers });
@@ -24,10 +32,10 @@ class FileService {
     return new Promise((resolve) => {
       const worker = new Worker(new URL('../longProcesses/hashFile.js', import.meta.url));
       worker.postMessage(chunkList);
-      worker.onmessage = (e) => {
-        const hash = e.data;
-        if (hash) resolve(hash);
-      };
+      worker.onmessage((e) => {
+        store.dispatch({ type: 'UPLOAD_PROGRESS', payload: e.data.progress });
+        if (e.data.ready) resolve(e.data.hash);
+      });
     });
   }
   sendChunk(formdata) {
@@ -36,11 +44,11 @@ class FileService {
       resolve(res);
     });
   }
-  async mergeChunks(fileInfo) {
+  async mergeChunks(data) {
+    data.size = this.chunkSize;
+    console.log(data);
     return new Promise(async (resolve, reject) => {
-      const res = await new Http({ withAuth: true }).post('fileMerge', fileInfo);
-      if (res.status === 201) return resolve(res);
-      reject(res);
+      await new Http({ withAuth: true }).post('fileMerge', data).then(resolve()).catch(reject());
     });
   }
 }
