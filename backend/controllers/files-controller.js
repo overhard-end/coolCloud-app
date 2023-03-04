@@ -37,16 +37,20 @@ class FilesController {
   }
   async mergeFile(req, res) {
     try {
-      const { fileName, fileHash, size } = req.body;
+      const { fileName, fileHash, size, relativePath } = req.body;
       const userId = req.session.userUuid;
       const userDir = path.resolve(UPLOAD_DIR, userId);
       const chunkDir = path.resolve(UPLOAD_DIR, userDir, `chunkDir_${fileHash}`);
-      const lastFilePath = path.join(userDir, fileName);
+      const lastFilePath = path.join(userDir, relativePath);
+      console.log(lastFilePath);
+      if (!fs.existsSync(lastFilePath)) {
+        fs.mkdirSync(lastFilePath);
+      }
       const allChunksPath = fs.readdirSync(chunkDir);
       allChunksPath.sort((a, b) => a.split('-')[1] - b.split('-')[1]);
 
       const pipeStream = (chunkPath, writeStream) => {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
           const readStream = fs.createReadStream(chunkPath);
           readStream.on('end', () => {
             fs.unlink(chunkPath, () => resolve(true));
@@ -58,13 +62,13 @@ class FilesController {
         allChunksPath.map((chunkPath, index) =>
           pipeStream(
             path.resolve(chunkDir, chunkPath),
-            fs.createWriteStream(lastFilePath, { start: index * size }),
+            fs.createWriteStream(path.resolve(lastFilePath, fileName), { start: index * size }),
           ),
         ),
       )
         .then(() => {
           fs.rmdirSync(chunkDir);
-          res.json('success');
+          res.json({ status: 'success', fileName: fileName });
         })
         .catch((err) => err);
     } catch (error) {

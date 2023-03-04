@@ -1,4 +1,5 @@
 import { Http } from '../api/api';
+import { HASHING_PROGRESS } from '../redux/actions/types';
 import store from '../redux/store';
 
 class FileService {
@@ -32,10 +33,10 @@ class FileService {
     return new Promise((resolve) => {
       const worker = new Worker(new URL('../longProcesses/hashFile.js', import.meta.url));
       worker.postMessage(chunkList);
-      worker.onmessage((e) => {
-        store.dispatch({ type: 'UPLOAD_PROGRESS', payload: e.data.progress });
-        if (e.data.ready) resolve(e.data.hash);
-      });
+      worker.onmessage = (e) => {
+        store.dispatch({ type: HASHING_PROGRESS, payload: e.data.progress });
+        if (e.data.ready) return resolve(e.data.hash);
+      };
     });
   }
   sendChunk(formdata) {
@@ -44,9 +45,8 @@ class FileService {
       resolve(res);
     });
   }
-  async mergeChunks(data) {
+  mergeChunks(data) {
     data.size = this.chunkSize;
-    console.log(data);
     return new Promise(async (resolve, reject) => {
       await new Http({ withAuth: true }).post('fileMerge', data).then(resolve()).catch(reject());
     });

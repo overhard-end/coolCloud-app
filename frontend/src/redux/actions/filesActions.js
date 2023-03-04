@@ -1,6 +1,15 @@
 import { FileDto } from "../../DTO's/fileDto";
 import fileService from '../../services/fileService';
-import { SET_FILES, SELECT_FILE, RETURN_FILE } from '../actions/types';
+import {
+  SET_FILES,
+  SELECT_FILE,
+  RETURN_FILE,
+  SET_UPLOAD,
+  FILE_UPLOADED,
+  UPLOAD_ERROR,
+  UPLOAD_DONE,
+  SET_CURRENT_FILE,
+} from '../actions/types';
 import store from '../store';
 
 export function fetchFiles() {
@@ -19,28 +28,34 @@ export function uploadFile(files) {
     try {
       const originalFileList = [...files];
       const dtoFileList = originalFileList.map((file) => new FileDto(file));
-      dispatch({ type: 'UPLOAD_START', payload: dtoFileList });
+      dispatch({ type: SET_UPLOAD, payload: dtoFileList });
+      console.log(dtoFileList);
       let currentFileIndex = null;
+
       async function readAndUploadFile() {
         const selectedFile = store.getState().filesReducer.selectedFile;
-        const filesFromStore = store.getState().filesReducer.uploadFile.files;
+        const filesFromStore = store.getState().uploadReducer.files;
 
         const fileListForUploading = originalFileList.filter((originalFile) =>
           filesFromStore.some((file) => originalFile.name === file.name),
         );
         const file = fileListForUploading[currentFileIndex];
+        const fileForStore = filesFromStore[currentFileIndex];
         if (!file) {
-          dispatch({ type: 'UPLOAD_DONE' });
+          dispatch({ type: UPLOAD_DONE });
           return dispatch(fetchFiles());
         }
+        dispatch({ type: SET_CURRENT_FILE, payload: fileForStore });
         const fileName = file.name;
-        const relativePath = file.webkitRelativePath;
+        let webkitRelativePath = file.webkitRelativePath.split('/');
+        webkitRelativePath.pop();
+        webkitRelativePath.join('/');
+        const relativePath = webkitRelativePath.join('/');
         const currentPath = selectedFile?.path;
         const chunkList = fileService.createFileChunk(file);
         const fileHash = await fileService.ganerateHash(chunkList);
-
+        return;
         const formData = new FormData();
-
         let dataForMerge = { fileHash, fileName, relativePath: currentPath + '/' + relativePath };
         await Promise.all(
           chunkList.map((chunk, index) => {
@@ -51,12 +66,15 @@ export function uploadFile(files) {
           .then(async () => {
             await fileService
               .mergeChunks(dataForMerge)
-              .then((res) => {
-                dispatch({ type: 'UPLOAD_PROGRESS' });
+              .then(() => {
+                currentFileIndex++;
+
+                dispatch({ type: FILE_UPLOADED, payload: fileForStore });
+                readAndUploadFile();
               })
               .catch((error) => console.log(error));
           })
-          .catch(dispatch({ type: 'UPLOAD_DONE' }));
+          .catch(dispatch({ type: UPLOAD_ERROR, payload: fileForStore }));
       }
 
       if (currentFileIndex === null) {

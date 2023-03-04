@@ -7,13 +7,6 @@ const initialState = {
   size: 0,
   maxSize: 0,
   isLoading: true,
-  uploadFile: {
-    files: [],
-    currentUploadingFile: {},
-    chunks: null,
-    currentChunk: null,
-    lastUploadedFiles: [],
-  },
 };
 
 const filesReducer = (state = initialState, action) => {
@@ -49,52 +42,6 @@ const filesReducer = (state = initialState, action) => {
         fileStack: fileStackPop,
         selectedFile: state.fileStack.at(-1),
       };
-    case 'UPLOAD_START':
-      return {
-        ...state,
-        uploadFile: {
-          ...state.uploadFile,
-          files: [...action.payload],
-        },
-      };
-    case 'UPLOAD_CHANGE':
-      return {
-        ...state,
-        uploadFile: {
-          ...state.uploadFile,
-          files: [...action.payload],
-        },
-      };
-    case 'UPLOAD_PROGRESS':
-      let lastFile;
-      if (action.payload.totalChunks === action.payload.currentChunkIndex) {
-        lastFile = action.payload.currentUploadingFile;
-      }
-      return {
-        ...state,
-        uploadFile: {
-          ...state.uploadFile,
-          chunks: action.payload.totalChunks,
-          currentChunk: action.payload.currentChunkIndex,
-          currentUploadingFile: action.payload.currentUploadingFile,
-
-          lastUploadedFiles: lastFile
-            ? [...state.uploadFile.lastUploadedFiles, lastFile]
-            : state.uploadFile.lastUploadedFiles,
-        },
-      };
-    case 'UPLOAD_DONE':
-      return {
-        ...state,
-        uploadFile: {
-          files: [],
-          currentUploadingFile: {},
-          chunks: 0,
-          currentChunk: 0,
-          lastUploadedFiles: [],
-        },
-      };
-
     default:
       return state;
   }

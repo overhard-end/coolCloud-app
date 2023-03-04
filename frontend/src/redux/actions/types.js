@@ -1,13 +1,11 @@
-export const SET_USER = 'SET_USER';
-export const SET_USER_ERROR = 'SET_USER_ERROR';
-export const SET_USER_SUCCESS = 'SET_USER_SUCCESS';
-
-export const REFRESH_TOKEN = 'REFRESH_TOKEN';
-
-export const LOGOUT = 'LOGOUT';
-export const USER_MESSAGE = 'USER_MESSAGE';
-
 export const SELECT_FILE = 'SELECT_FILE';
 export const SET_FILES = 'SET_FILES';
 export const RETURN_FILE = 'RETURN_FILE';
-export const UPLOAD_FILE = 'UPLOAD_FILE';
+
+export const SET_UPLOAD = 'SET_UPLOAD';
+export const HASHING_PROGRESS = 'HASHING_PROGRESS';
+export const UPLOADING_PROGRESS = 'UPLOADING_PROGRESS';
+export const FILE_UPLOADED = 'FILE_UPLOADED';
+export const UPLOAD_DONE = 'UPLOAD_DONE';
+export const UPLOAD_ERROR = 'UPLOAD_ERROR';
+export const SET_CURRENT_FILE = 'SET_CURRENT_FILE';
