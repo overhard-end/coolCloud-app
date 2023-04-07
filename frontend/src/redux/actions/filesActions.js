@@ -1,4 +1,3 @@
-import { FileDto } from "../../DTO's/fileDto";
 import fileService from '../../services/fileService';
 import {
   SET_FILES,
@@ -9,14 +8,18 @@ import {
   UPLOAD_ERROR,
   UPLOAD_DONE,
   SET_CURRENT_FILE,
+  UPLOADING_PROGRESS,
+  HASHING_PROGRESS,
 } from '../actions/types';
 import store from '../store';
 
 export function fetchFiles() {
   return async (dispatch) => {
     try {
-      const response = await fileService.getFiles();
-      return dispatch({ type: SET_FILES, payload: response.data });
+      fileService
+        .getFiles()
+        .then((response) => dispatch({ type: SET_FILES, payload: response.data }))
+        .catch((err) => err);
     } catch (error) {
       console.log(error);
     }
@@ -26,55 +29,58 @@ export function fetchFiles() {
 export function uploadFile(files) {
   return async (dispatch) => {
     try {
-      const originalFileList = [...files];
-      const dtoFileList = originalFileList.map((file) => new FileDto(file));
-      dispatch({ type: SET_UPLOAD, payload: dtoFileList });
-      console.log(dtoFileList);
+      dispatch({ type: SET_UPLOAD, payload: [...files] });
       let currentFileIndex = null;
-
       async function readAndUploadFile() {
         const selectedFile = store.getState().filesReducer.selectedFile;
-        const filesFromStore = store.getState().uploadReducer.files;
-
-        const fileListForUploading = originalFileList.filter((originalFile) =>
-          filesFromStore.some((file) => originalFile.name === file.name),
-        );
-        const file = fileListForUploading[currentFileIndex];
-        const fileForStore = filesFromStore[currentFileIndex];
+        const filesForUpload = store.getState().uploadReducer.files;
+        const file = filesForUpload[currentFileIndex];
         if (!file) {
           dispatch({ type: UPLOAD_DONE });
           return dispatch(fetchFiles());
         }
-        dispatch({ type: SET_CURRENT_FILE, payload: fileForStore });
+        dispatch({ type: SET_CURRENT_FILE, payload: file });
         const fileName = file.name;
-        let webkitRelativePath = file.webkitRelativePath.split('/');
-        webkitRelativePath.pop();
-        webkitRelativePath.join('/');
-        const relativePath = webkitRelativePath.join('/');
-        const currentPath = selectedFile?.path;
-        const chunkList = fileService.createFileChunk(file);
-        const fileHash = await fileService.ganerateHash(chunkList);
-        return;
-        const formData = new FormData();
-        let dataForMerge = { fileHash, fileName, relativePath: currentPath + '/' + relativePath };
-        await Promise.all(
-          chunkList.map((chunk, index) => {
-            formData.append(fileHash + '-' + index, chunk);
-            return fileService.sendChunk(formData);
-          }),
-        )
-          .then(async () => {
-            await fileService
-              .mergeChunks(dataForMerge)
-              .then(() => {
-                currentFileIndex++;
+        const relativeFilePath = fileService.getRelativePath(selectedFile.path, file);
+        let chunkList = fileService.createFileChunk(file);
 
-                dispatch({ type: FILE_UPLOADED, payload: fileForStore });
-                readAndUploadFile();
-              })
-              .catch((error) => console.log(error));
+        const handleHashingProgress = (progress) => {
+          dispatch({ type: HASHING_PROGRESS, payload: progress });
+        };
+        const fileHash = await fileService.ganerateHash(chunkList, handleHashingProgress);
+        const checkFile = await fileService.checkFile({ fileName, fileHash });
+        const { exist, lastIndex } = checkFile;
+        if (exist) {
+          dispatch({ type: FILE_UPLOADED, payload: file });
+          currentFileIndex++;
+          return readAndUploadFile();
+        }
+        if (lastIndex) {
+          chunkList = chunkList.filter((chunk) => !lastIndex.includes(chunk.index));
+        }
+
+        let dataForMerge = { fileHash, fileName, relativePath: relativeFilePath };
+
+        const handleUploadProgress = (chunkIndex) => (progress) => {
+          const chunksProgress = fileService.chunkUploadProgress(chunkIndex, progress);
+          let percent;
+          if (chunksProgress.percent !== percent) {
+            percent = chunksProgress.percent;
+            const filePercent = fileService.fileUploadProgress(chunksProgress, chunkList.length);
+            dispatch({ type: UPLOADING_PROGRESS, payload: filePercent });
+          }
+        };
+        await fileService
+          .chunksRequestPool(chunkList, fileHash, handleUploadProgress)
+          .then(async (results) => {
+            console.log(results);
+            await fileService.mergeChunks(dataForMerge).then(() => {
+              currentFileIndex++;
+              dispatch({ type: FILE_UPLOADED, payload: file });
+              readAndUploadFile();
+            });
           })
-          .catch(dispatch({ type: UPLOAD_ERROR, payload: fileForStore }));
+          .catch(() => alert('some peices of file do not was uploaded'));
       }
 
       if (currentFileIndex === null) {
@@ -88,17 +94,17 @@ export function uploadFile(files) {
   };
 }
 
+export function cancelUploading() {
+  return (dispatch) => {
+    fileService.cancelRequests();
+    dispatch({ type: UPLOAD_DONE });
+  };
+}
+
 export function removeFile(file) {
   return async (dispatch) => {
     try {
-      const files = {
-        path: file.path,
-        type: file.type,
-      };
-      const response = await fileService.removeFiles(files);
-      if (response.status === 200) {
-        dispatch(fetchFiles());
-      }
+      await fileService.removeFiles(file.path).then((response) => dispatch(fetchFiles()));
     } catch (error) {
       console.log(error);
     }

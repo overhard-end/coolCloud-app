@@ -1,25 +1,11 @@
 const path = require('path');
 const fs = require('fs');
-const filesService = require('../services/files-service');
 const busboy = require('busboy');
-const { resolve } = require('path');
+const filesService = require('../services/files-service');
 const UPLOAD_DIR = path.join(__dirname, '../uploads/root');
-class FilesController {
-  async checkFile(req, res) {
-    try {
-      const userId = req.session.userUuid;
-      const { fileName } = req.body;
-      const checkingFilePath = path.join(UPLOAD_DIR, userId, fileName);
-      const fileExists = fs.existsSync(checkingFilePath);
-      if (fileExists)
-        return res.status(409).json({ message: 'File already exists', upload: false });
-      res.json({ message: 'Ready for upload', upload: true });
-    } catch (error) {
-      console.error(error);
-      res.sendStatus(500);
-    }
-  }
+const TMP_DIR = path.join(__dirname, '../tmp');
 
+class FilesController {
   async getFiles(req, res) {
     try {
       const userId = req.session.userUuid;
@@ -35,12 +21,34 @@ class FilesController {
       res.status(500);
     }
   }
+  async checkFile(req, res) {
+    try {
+      const userId = req.session.userUuid;
+      const { fileName, fileHash } = req.body;
+      const checkingFilePath = path.resolve(UPLOAD_DIR, userId, fileName);
+      const chunkDirPath = path.resolve(TMP_DIR, userId, `chunkDir_${fileHash}`);
+      const isFileExist = fs.existsSync(checkingFilePath);
+      const isChunkDirExist = fs.existsSync(chunkDirPath);
+      if (isFileExist) return res.json({ exist: true });
+
+      if (!isChunkDirExist) return res.json({ exist: false });
+      const uploadedChunks = fs.readdirSync(chunkDirPath);
+      const chunksIndex = uploadedChunks.map((chunk) => parseInt(chunk.split('-').pop()));
+      if (chunksIndex.length > 0) return res.json({ exist: false, lastIndex: chunksIndex });
+      res.json({ exist: false });
+    } catch (error) {
+      console.error(error);
+      res.sendStatus(500);
+    }
+  }
+
   async mergeFile(req, res) {
     try {
       const { fileName, fileHash, size, relativePath } = req.body;
       const userId = req.session.userUuid;
       const userDir = path.resolve(UPLOAD_DIR, userId);
-      const chunkDir = path.resolve(UPLOAD_DIR, userDir, `chunkDir_${fileHash}`);
+      const userTmpDir = path.resolve(TMP_DIR, userId);
+      const chunkDir = path.resolve(TMP_DIR, userTmpDir, `chunkDir_${fileHash}`);
       const lastFilePath = path.join(userDir, relativePath);
       console.log(lastFilePath);
       if (!fs.existsSync(lastFilePath)) {
@@ -65,12 +73,11 @@ class FilesController {
             fs.createWriteStream(path.resolve(lastFilePath, fileName), { start: index * size }),
           ),
         ),
-      )
-        .then(() => {
-          fs.rmdirSync(chunkDir);
-          res.json({ status: 'success', fileName: fileName });
-        })
-        .catch((err) => err);
+      ).then(() => {
+        if (fs.existsSync(chunkDir)) fs.rmdirSync(chunkDir);
+        fs.rmdirSync(userTmpDir);
+        res.json({ status: 'success', fileName: fileName });
+      });
     } catch (error) {
       console.error(error);
       res.status(500);
@@ -79,18 +86,21 @@ class FilesController {
   async saveChunks(req, res) {
     try {
       const userId = req.session.userUuid;
+      const userTmpDir = path.resolve(TMP_DIR, userId);
       const bb = busboy({ headers: req.headers });
-      const userDir = path.resolve(UPLOAD_DIR, userId);
+      if (!fs.existsSync(userTmpDir)) fs.mkdirSync(userTmpDir);
 
-      bb.on('file', (name, file, info) => {
-        const fileHash = name.split('-')[0];
-        const chunkDir = path.resolve(UPLOAD_DIR, userDir, `chunkDir_${fileHash}`);
-        if (!fs.existsSync(chunkDir)) {
-          fs.mkdirSync(chunkDir);
-        }
-        file.pipe(fs.createWriteStream(path.resolve(chunkDir, name)));
+      bb.on('file', (chunkName, chunk) => {
+        const fileHash = chunkName.split('-')[0];
+        const chunkSize = parseInt(chunkName.split('-')[1]);
+        const chunkDir = path.resolve(TMP_DIR, userTmpDir, `chunkDir_${fileHash}`);
+        if (!fs.existsSync(chunkDir)) fs.mkdirSync(chunkDir);
+        const chunkPath = path.resolve(chunkDir, chunkName);
+        req.on('close', () =>
+          filesService.checkChunk(chunkPath, chunkSize) ? res.json() : res.sendStatus(400),
+        );
+        chunk.pipe(fs.createWriteStream(chunkPath));
       });
-      bb.on('close', () => console.log('current chunk was uploaded'), res.json('ok'));
       req.pipe(bb);
     } catch (error) {
       console.error(error);
@@ -99,29 +109,23 @@ class FilesController {
   }
 
   async removeFile(req, res) {
-    const filePath = req.body.file.path;
-    const fileType = req.body.file.type;
-
-    const relativePath = path.join(__dirname, '../uploads/rootDisk', filePath);
-    const fileExist = fs.existsSync(relativePath);
+    const userId = req.session.userUuid;
+    const filePath = req.body.filePath;
+    const pathForDelete = path.join(UPLOAD_DIR, userId, filePath);
+    const isfileExist = fs.existsSync(pathForDelete);
     try {
-      if (!fileExist) {
+      if (!isfileExist) {
         return res.json({ statusSuccesse: false, message: 'File not found !' });
       }
-      if (fileType === 'file') {
-        fs.unlinkSync(relativePath);
-        return res
-          .status(200)
-          .send({ statusSuccesse: true, message: 'File has been successfully deleted ! ' });
-      }
-      fs.rmSync(relativePath, { recursive: true, force: true });
-      res
+      fs.unlinkSync(pathForDelete);
+      return res
         .status(200)
-        .send({ statusSuccesse: true, message: 'Folder has been successfully deleted ! ' });
+        .send({ statusSuccesse: true, message: 'File has been successfully deleted ! ' });
     } catch (error) {
       console.error(error);
       res.status(500).send({ statusSuccesse: false, message: error });
     }
   }
 }
+
 module.exports = new FilesController();

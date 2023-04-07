@@ -12,6 +12,7 @@ const inintialState = {
   files: [],
   currentFile: {},
   uploadProgress: 0,
+
   hashProgress: 0,
   uploadedFiles: [],
   error: [],
@@ -34,6 +35,8 @@ const uploadReducer = (state = inintialState, action) => {
       return {
         ...state,
         currentFile: action.payload,
+        uploadProgress: 0,
+        hashProgress: 0,
       };
     case UPLOADING_PROGRESS:
       return {

@@ -18,58 +18,54 @@ import {
   ListItemText,
 } from '@mui/material';
 import { Cancel, Check } from '@mui/icons-material';
-import { SET_UPLOAD, UPLOAD_DONE } from '../redux/actions/types';
+import { SET_UPLOAD } from '../redux/actions/types';
+import { cancelUploading } from '../redux/actions/filesActions';
 
 export function FileUploadProgress() {
   const dispatch = useDispatch();
   const { files, currentFile, uploadProgress, hashProgress, uploadedFiles } = useSelector(
     (state) => state.uploadReducer,
   );
+  const isCurrentFile = (file) => file.name === currentFile.name;
+  const isUploadedFile = (file) =>
+    uploadedFiles.filter((lastFile) => lastFile.name === file.name).length > 0;
 
   let uploadingFiles = files;
 
-  const percent = uploadProgress;
-
   function deleteFileFromUpload(targetFile) {
-    if (targetFile === 'all') return dispatch({ type: UPLOAD_DONE });
     uploadingFiles = uploadingFiles.filter((file) => {
       return file.name !== targetFile.name;
     });
     dispatch({ type: SET_UPLOAD, payload: uploadingFiles });
   }
-  console.log(hashProgress);
+
   return (
     <Container sx={{ position: 'absolute' }} maxWidth="lg">
       <Dialog open={uploadingFiles.length > 0 ? true : false}>
         <DialogTitle> Uploading </DialogTitle>
         <List disablePadding>
           {uploadingFiles.map((file, index) => (
-            <ListItem
-              sx={{ display: 'flex', justifyContent: 'space-between', flexDirection: 'column' }}
-              key={index}>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Box sx={{ width: '100%', mr: 1 }}>
+            <ListItem sx={{ display: 'flex', flexDirection: 'column' }} key={index}>
+              {isCurrentFile(file) && hashProgress !== 100 ? (
+                <Box mb="5px" width="inherit" flexDirection="column" justifyContent="start">
+                  <Box sx={{ minWidth: 35 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Preparing...
+                    </Typography>
+                  </Box>
                   <LinearProgress variant="determinate" value={hashProgress} />
                 </Box>
-                <Box sx={{ minWidth: 35 }}>
-                  <Typography
-                    variant="body2"
-                    color="text.secondary">{`${hashProgress}%`}</Typography>
-                </Box>
-              </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+              ) : (
+                ''
+              )}
+              <Box display="flex" justifyContent="space-between" width="100%">
                 <ListItemAvatar>
                   <Avatar>
                     <Box sx={{ position: 'absolute', display: 'inline-flex' }}>
                       <CircularProgress
                         variant="determinate"
                         value={
-                          currentFile.name === file.name
-                            ? percent
-                            : uploadedFiles.filter((lastFile) => lastFile.name === file.name)
-                                .length > 0
-                            ? 100
-                            : 0
+                          isCurrentFile(file) ? uploadProgress : isUploadedFile(file) ? 100 : 0
                         }
                       />
                       <Box
@@ -85,12 +81,7 @@ export function FileUploadProgress() {
                         }}>
                         <Typography variant="caption" component="div" color="text.secondary">
                           {`${
-                            currentFile.name === file.name
-                              ? percent
-                              : uploadedFiles.filter((lastFile) => lastFile.name === file.name)
-                                  .length > 0
-                              ? 100
-                              : 0
+                            isCurrentFile(file) ? uploadProgress : isUploadedFile(file) ? 100 : 0
                           }%`}
                         </Typography>
                       </Box>
@@ -98,11 +89,9 @@ export function FileUploadProgress() {
                   </Avatar>
                 </ListItemAvatar>
 
-                {/* <ListItemIcon>{fileIcon(file.exptention)}</ListItemIcon> */}
-
                 <ListItemText>{file.name}</ListItemText>
 
-                {uploadedFiles.filter((lastFile) => lastFile.name === file.name).length > 0 ? (
+                {isUploadedFile(file) ? (
                   <IconButton edge="end" disabled>
                     <Check />
                   </IconButton>
@@ -119,7 +108,7 @@ export function FileUploadProgress() {
           ))}
         </List>
         <DialogActions>
-          <Button>Cancel Uploading</Button>
+          <Button onClick={() => dispatch(cancelUploading())}>Cancel Uploading</Button>
         </DialogActions>
       </Dialog>
     </Container>

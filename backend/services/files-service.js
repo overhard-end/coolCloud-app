@@ -1,5 +1,7 @@
 const dirTree = require('directory-tree'); //library for get files structure from storage directory
 
+const fs = require('fs');
+
 class FileService {
   getfilesTree(storagePath, userId) {
     const resuts = dirTree(
@@ -22,6 +24,14 @@ class FileService {
       },
     );
     return resuts;
+  }
+  checkChunk(chunkPath, chunkSize) {
+    if (!fs.existsSync(chunkPath)) return false;
+    const currentChunkSize = fs.statSync(chunkPath).size;
+    console.log(currentChunkSize + '-' + chunkSize);
+    if (chunkSize === currentChunkSize) return true;
+    fs.unlinkSync(chunkPath);
+    return false;
   }
 }
 module.exports = new FileService();
