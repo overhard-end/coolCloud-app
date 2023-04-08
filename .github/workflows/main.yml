@@ -1,0 +1,10 @@
+name:First Workflow
+on:workflow_dispatch
+jobs:
+  print:
+    runs-on:windows-latest
+    steps:
+      - name:print some info
+        -run:color 2 ,dir/c
+        
+    
