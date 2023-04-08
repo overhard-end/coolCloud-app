@@ -3,9 +3,8 @@
     "server": " cd backend && npm start",
     "client": " cd frontend &&  npm start",
     "buildF": " cd frontend &&  npm build",
-    "buildS": " cd backend &&  npm build",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "build": "concurrently \"npm run buildF\" \"npm run buildS\""
+    "build": "concurrently \"npm run buildF\" \"npm run server\""
   },
   "devDependencies": {
     "concurrently": "^7.4.0"
