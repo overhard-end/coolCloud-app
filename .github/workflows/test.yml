@@ -1,0 +1,8 @@
+name: test
+on: workflow_dispatch
+jobs:
+  print:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Print the input tag to STDOUT
+      run: echo Hi guys!
