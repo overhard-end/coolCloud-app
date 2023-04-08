@@ -72,17 +72,18 @@ export function uploadFile(files) {
         };
         await fileService
           .chunksRequestPool(chunkList, fileHash, handleUploadProgress)
-          .then(async (results) => {
-            console.log(results);
+          .then(async () => {
             await fileService.mergeChunks(dataForMerge).then(() => {
               currentFileIndex++;
               dispatch({ type: FILE_UPLOADED, payload: file });
               readAndUploadFile();
             });
           })
-          .catch(() => alert('some peices of file do not was uploaded'));
+          .catch((err) => {
+            dispatch({ type: UPLOAD_ERROR, payload: err });
+            alert('some peices of file do not was uploaded');
+          });
       }
-
       if (currentFileIndex === null) {
         currentFileIndex = 0;
         readAndUploadFile();
@@ -93,7 +94,20 @@ export function uploadFile(files) {
     }
   };
 }
-
+export function downloadFile(file) {
+  return async (dispatch) => {
+    const filePath = file.path;
+    const res = await fileService.downloadFile(filePath);
+    const blob = res.data;
+    const a = document.createElement('a');
+    a.href = window.URL.createObjectURL(blob);
+    a.download = file.name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    console.log(res);
+  };
+}
 export function cancelUploading() {
   return (dispatch) => {
     fileService.cancelRequests();

@@ -10,7 +10,6 @@ class FileService {
       await this.api.get('/files').then((res) => resolve(res));
     });
   }
-
   async removeFiles(filePath) {
     return await this.api.post('/removeFile', { filePath: filePath });
   }
@@ -38,6 +37,7 @@ class FileService {
       cur += this.chunkSize;
       index++;
     }
+    console.log(chunkList);
     return chunkList;
   }
   ganerateHash(chunkList, handleHashingProgress) {
@@ -56,7 +56,6 @@ class FileService {
       };
     });
   }
-  createChunkHash(chunkList) {}
 
   fileUploadProgress = (chunksProgress, chunksLenght) => {
     this.progressArray[chunksProgress.index] = chunksProgress.percent;
@@ -68,7 +67,9 @@ class FileService {
     const percent = Math.round((progress.loaded / progress.total) * 100);
     return { index: chunkIndex, percent: percent };
   };
-
+  downloadFile(filePath) {
+    return this.api.post('fileDownload', { filePath: filePath }, { responseType: 'blob' });
+  }
   async chunksRequestPool(chunkList, fileHash, handleUploadProgress) {
     let requests = [];
     chunkList.map((chunk) => {
@@ -83,7 +84,7 @@ class FileService {
   sendChunk(chunkName, chunk, config) {
     const formData = new FormData();
     formData.append(chunkName, chunk);
-    return this.api.post('/files', formData, {
+    return this.api.post('/chunk', formData, {
       ...config,
       cancelToken: this.sourse.token,
     });
@@ -94,7 +95,7 @@ class FileService {
   mergeChunks(data) {
     data.size = this.chunkSize;
     return new Promise(async (resolve, reject) => {
-      await this.api.post('fileMerge', data).then(resolve()).catch(reject());
+      await this.api.post('/fileMerge', data).then(resolve()).catch(reject());
     });
   }
 }

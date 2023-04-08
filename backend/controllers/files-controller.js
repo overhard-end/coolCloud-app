@@ -41,7 +41,15 @@ class FilesController {
       res.sendStatus(500);
     }
   }
-
+  async downloadFile(req, res) {
+    const userId = req.session.userUuid;
+    const userDir = path.resolve(UPLOAD_DIR, userId);
+    const filePath = req.body.filePath;
+    const fileName = path.basename(filePath);
+    const currentFilePath = path.join(userDir, filePath);
+    res.setHeader('Content-Disposition', `attachment;filename=${fileName}`);
+    res.pipe(fs.createWriteStream(currentFilePath));
+  }
   async mergeFile(req, res) {
     try {
       const { fileName, fileHash, size, relativePath } = req.body;
@@ -51,11 +59,10 @@ class FilesController {
       const chunkDir = path.resolve(TMP_DIR, userTmpDir, `chunkDir_${fileHash}`);
       const lastFilePath = path.join(userDir, relativePath);
       console.log(lastFilePath);
-      if (!fs.existsSync(lastFilePath)) {
-        fs.mkdirSync(lastFilePath);
-      }
+      if (!fs.existsSync(lastFilePath)) fs.mkdirSync(lastFilePath);
+
       const allChunksPath = fs.readdirSync(chunkDir);
-      allChunksPath.sort((a, b) => a.split('-')[1] - b.split('-')[1]);
+      allChunksPath.sort((a, b) => a.split('-')[2] - b.split('-')[2]);
 
       const pipeStream = (chunkPath, writeStream) => {
         return new Promise((resolve) => {
@@ -96,9 +103,7 @@ class FilesController {
         const chunkDir = path.resolve(TMP_DIR, userTmpDir, `chunkDir_${fileHash}`);
         if (!fs.existsSync(chunkDir)) fs.mkdirSync(chunkDir);
         const chunkPath = path.resolve(chunkDir, chunkName);
-        req.on('close', () =>
-          filesService.checkChunk(chunkPath, chunkSize) ? res.json() : res.sendStatus(400),
-        );
+        chunk.on('close', () => res.json());
         chunk.pipe(fs.createWriteStream(chunkPath));
       });
       req.pipe(bb);

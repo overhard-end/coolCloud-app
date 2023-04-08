@@ -8,7 +8,7 @@ import {
 } from '@mui/icons-material';
 import { Menu, MenuItem, Typography } from '@mui/material';
 import React from 'react';
-import { removeFile } from '../redux/actions/filesActions';
+import { removeFile, downloadFile } from '../redux/actions/filesActions';
 import { useDispatch } from 'react-redux';
 
 export const FileContextMenu = ({ openFile, file, anchorEl, open, handleCloseContextMenu }) => {
@@ -16,7 +16,7 @@ export const FileContextMenu = ({ openFile, file, anchorEl, open, handleCloseCon
   const contextMenuOptions = [
     { action: openFile, id: 0, name: 'Открыть', icon: <OpenInBrowser /> },
     { id: 1, name: 'Отправить', icon: <Send /> },
-    { id: 2, name: 'Скачать', icon: <Download /> },
+    { action: downloadFile, id: 2, name: 'Скачать', icon: <Download /> },
     { action: removeFile, id: 3, name: 'Удалить', icon: <Delete /> },
     { id: 4, name: 'Показать свойства', icon: <Info /> },
     { id: 5, name: 'Переименовать', icon: <DriveFileRenameOutline /> },

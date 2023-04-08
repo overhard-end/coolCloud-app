@@ -1,0 +1,12 @@
+name: testing app
+on: push
+jobs:
+  testing:
+    runs-on: ubuntu-latest
+    steps:
+      - name: get repository code
+        uses: actions/checkout@v3
+      - name: install dependencies
+        run: npm ci
+      - name: testing frontend
+        run: cd frontend &&  npm test
