@@ -5,6 +5,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: print some info
+        run: ipconfig
        
         
     
