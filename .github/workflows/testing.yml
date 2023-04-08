@@ -9,4 +9,5 @@ jobs:
       - name: install dependencies
         run: npm ci
       - name: testing frontend
-        run: cd frontend &&  npm test
+        working-directory: ./frontend
+        run: npm test
