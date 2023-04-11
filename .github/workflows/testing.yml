@@ -3,6 +3,7 @@ on: push
 jobs:
   testing:
     runs-on: ubuntu-latest
+    needs: testing
     steps:
       - name: get repository code
         uses: actions/checkout@v3
@@ -11,12 +12,3 @@ jobs:
       - name: testing frontend
         working-directory: ./frontend
         run: npm build
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: get repository
-        uses: actions/checkout@v3
-      - name: install dependencies
-        run: npm ci
-      - name: build project
-        run: npm run build

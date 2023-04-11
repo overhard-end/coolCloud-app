@@ -12,24 +12,36 @@ import {
 } from '@mui/material';
 import React from 'react';
 import { useDispatch } from 'react-redux';
-import { uploadFile } from '../redux/actions/filesActions';
+import { fetchFiles, uploadFile } from '../redux/actions/filesActions';
+import fileService from '../services/fileService';
 
 export const MenuTools = () => {
   const dispatch = useDispatch();
   const [open, setOpen] = React.useState(false);
-  const [folderName, setFolderName] = React.useState('');
+  const [dirName, setDirName] = React.useState('');
   const [anchorEl, setAnchorEl] = React.useState(null);
-  const [openCreateFolder, setOpenCreateFolder] = React.useState(false);
+  const [openCreateDir, setOpenCreateDir] = React.useState(false);
+  const [validate, setValidate] = React.useState(false);
 
   const openMenuTools = (e) => {
     setAnchorEl(e.currentTarget);
     setOpen(true);
+    setDirName('');
   };
 
-  const handleCreateFolder = () => {
-    if (folderName.length <= 1) return false;
-    setOpenCreateFolder(false);
-    setOpen(false);
+  const handleCreateDir = async () => {
+    if (dirName.length < 1) return setValidate('Поле не должо быть пустым !');
+    await fileService
+      .createDir(dirName)
+      .then((result) => {
+        dispatch(fetchFiles());
+        setOpenCreateDir(false);
+        setOpen(false);
+      })
+      .catch((result) => {
+        console.log(result);
+        setValidate(result.data.message);
+      });
   };
   return (
     <>
@@ -46,31 +58,42 @@ export const MenuTools = () => {
         Создать
       </Button>
       <Menu id="basic-menu" anchorEl={anchorEl} open={open} onClose={() => setOpen(false)}>
-        <MenuItem id="create-new-folder" onClick={() => setOpenCreateFolder(true)}>
+        <MenuItem
+          id="create-new-dir"
+          onClick={() => {
+            setOpenCreateDir(true);
+          }}>
           <CreateNewFolder />
           Создать папку
         </MenuItem>
         <Dialog
           aria-labelledby="create-new-folder"
-          open={openCreateFolder}
-          onClose={() => setOpenCreateFolder(false)}>
+          open={openCreateDir}
+          onClose={() => {
+            setOpen(false);
+            setOpenCreateDir(false);
+          }}>
           <DialogContent>
             <DialogContentText>Не давай тупое название по типу 'аааа' или '5555'</DialogContentText>
             <TextField
               autoFocus
               margin="dense"
               id="folderName"
-              label="Введите название папки*"
-              // helperText={textValidation ? 'Поле не должо быть пустым !' : ''}
+              label="Введите название папки"
+              error={validate ? true : false}
+              helperText={validate ? validate : ''}
               type="text"
               fullWidth
-              value={folderName}
-              onChange={(e) => setFolderName(e.target.value)}
+              value={dirName}
+              onChange={(e) => {
+                setValidate(false);
+                setDirName(e.target.value);
+              }}
               variant="standard"
             />
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleCreateFolder}>Создать </Button>
+            <Button onClick={() => handleCreateDir()}>Создать </Button>
           </DialogActions>
         </Dialog>
         <Divider />

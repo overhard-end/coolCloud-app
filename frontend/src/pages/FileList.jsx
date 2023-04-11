@@ -19,6 +19,8 @@ import { fetchFiles, returnFile, uploadFile } from '../redux/actions/filesAction
 import Header from '../components/Header';
 import { SideBar } from '../components/SideBar';
 import { FilesProgresUI } from '../components/FilesProgresUI';
+import { DownloadAlert } from '../components/downloadAlert';
+
 import { useDispatch, useSelector } from 'react-redux';
 import { FileUploadProgress } from '../components/FileUploadProgress';
 
@@ -102,6 +104,7 @@ export const FileList = () => {
             </List>
           </Grid>
         )}
+        <DownloadAlert />
       </Container>
     </>
   );

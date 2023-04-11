@@ -48,15 +48,16 @@ export function uploadFile(files) {
           dispatch({ type: HASHING_PROGRESS, payload: progress });
         };
         const fileHash = await fileService.ganerateHash(chunkList, handleHashingProgress);
-        const checkFile = await fileService.checkFile({ fileName, fileHash });
-        const { exist, lastIndex } = checkFile;
+
+        const { exist, newChunkList } = await fileService.checkFile({
+          fileName,
+          fileHash,
+          chunkList,
+        });
         if (exist) {
           dispatch({ type: FILE_UPLOADED, payload: file });
           currentFileIndex++;
           return readAndUploadFile();
-        }
-        if (lastIndex) {
-          chunkList = chunkList.filter((chunk) => !lastIndex.includes(chunk.index));
         }
 
         let dataForMerge = { fileHash, fileName, relativePath: relativeFilePath };
@@ -94,8 +95,15 @@ export function uploadFile(files) {
     }
   };
 }
+export function createDir(file) {
+  return async (dispatch) => {
+    fileService.createDir(file);
+  };
+}
 export function downloadFile(file) {
   return async (dispatch) => {
+    if (file.type === 'directory') return;
+    dispatch({ type: 'DOWNLOAD_ALERT', payload: true });
     const filePath = file.path;
     const res = await fileService.downloadFile(filePath);
     const blob = res.data;
@@ -105,6 +113,7 @@ export function downloadFile(file) {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+    dispatch({ type: 'DOWNLOAD_ALERT', payload: false });
     console.log(res);
   };
 }

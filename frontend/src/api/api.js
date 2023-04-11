@@ -26,7 +26,7 @@ class Http {
             if (!UserFront.tokens.accessToken) return window.location.replace('/auth');
             this.instance(originalRequest, true);
           }
-          return Promise.reject(originalRequest);
+          return Promise.reject(error.response);
         },
       );
       return this.instance;

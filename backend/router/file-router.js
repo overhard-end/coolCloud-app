@@ -9,5 +9,6 @@ router.post('/fileCheck', accessTokenCheck, filesController.checkFile);
 router.post('/fileMerge', accessTokenCheck, filesController.mergeFile);
 router.post('/fileRemove', accessTokenCheck, filesController.removeFile);
 router.post('/fileDownload', accessTokenCheck, filesController.downloadFile);
+router.post('/createDir', accessTokenCheck, filesController.createDir);
 
 module.exports = router;

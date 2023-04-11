@@ -12,7 +12,7 @@ const inintialState = {
   files: [],
   currentFile: {},
   uploadProgress: 0,
-
+  download: false,
   hashProgress: 0,
   uploadedFiles: [],
   error: [],
@@ -62,6 +62,11 @@ const uploadReducer = (state = inintialState, action) => {
       return {
         ...state,
         error: action.payload,
+      };
+    case 'DOWNLOAD_ALERT':
+      return {
+        ...state,
+        download: action.payload,
       };
     default:
       return state;

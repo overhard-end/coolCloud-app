@@ -25,7 +25,13 @@ export const FileContextMenu = ({ openFile, file, anchorEl, open, handleCloseCon
   return (
     <Menu id="lock-menu" anchorEl={anchorEl} open={open} onClose={handleCloseContextMenu}>
       {contextMenuOptions.map((item, index) => (
-        <MenuItem dense={true} key={index} onClick={() => dispatch(item.action(file))}>
+        <MenuItem
+          dense={true}
+          key={index}
+          onClick={() => {
+            handleCloseContextMenu();
+            dispatch(item.action(file));
+          }}>
           {item.icon}
           <Typography>{item.name}</Typography>
         </MenuItem>

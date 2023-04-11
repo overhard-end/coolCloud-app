@@ -1,5 +1,6 @@
 import axios from 'axios';
 import Http from '../api/api';
+import store from '../redux/store';
 class FileService {
   chunkSize = 10 * 1024 * 1024;
   sourse = axios.CancelToken.source();
@@ -20,10 +21,13 @@ class FileService {
     if (currentPath) return currentPath + '/' + relativeFilePath;
     return relativeFilePath;
   }
-  checkFile({ fileName, fileHash }) {
+  checkFile({ fileName, fileHash, chunkList }) {
     return new Promise(async (resolve) => {
       await this.api.post('/fileCheck', { fileName: fileName, fileHash: fileHash }).then((res) => {
-        resolve(res.data);
+        const { exist, lastIndex } = res.data;
+        if (exist) return resolve({ newChunkList: chunkList });
+        const newChunkList = chunkList.filter((chunk) => !lastIndex.includes(chunk.index));
+        if (lastIndex) return resolve({ newChunkList: newChunkList });
       });
     });
   }
@@ -40,6 +44,35 @@ class FileService {
     console.log(chunkList);
     return chunkList;
   }
+
+  fileUploadProgress = (chunksProgress, chunksLenght) => {
+    this.progressArray[chunksProgress.index] = chunksProgress.percent;
+    let totalChunksPercent = this.progressArray.reduce((sum, current) => sum + current, 0);
+    return Math.round((totalChunksPercent / (chunksLenght * 100)) * 100);
+  };
+  async createDir(dirName) {
+    const currentDir = store.getState().filesReducer.selectedFile.path;
+    const dirPath = currentDir + '/' + dirName;
+    return await this.api.post('/createDir', { dirPath: dirPath });
+  }
+  chunkUploadProgress = (chunkIndex, progress) => {
+    const percent = Math.round((progress.loaded / progress.total) * 100);
+    return { index: chunkIndex, percent: percent };
+  };
+  downloadFile(filePath) {
+    return this.api.post('fileDownload', { filePath: filePath }, { responseType: 'blob' });
+  }
+  async chunksRequestPool(chunkList, fileHash, handleUploadProgress) {
+    return await Promise.all(
+      chunkList.map((chunk) => {
+        const chunkName = `${fileHash}-${chunk.chunk.size}-${chunk.index}`;
+        const config = {
+          onUploadProgress: handleUploadProgress(chunk.index),
+        };
+        return this.sendChunk(chunkName, chunk.chunk, config);
+      }),
+    );
+  }
   ganerateHash(chunkList, handleHashingProgress) {
     return new Promise((resolve) => {
       const worker = new Worker(new URL('../longProcesses/hashFile.js', import.meta.url));
@@ -55,31 +88,6 @@ class FileService {
         }
       };
     });
-  }
-
-  fileUploadProgress = (chunksProgress, chunksLenght) => {
-    this.progressArray[chunksProgress.index] = chunksProgress.percent;
-    let totalChunksPercent = this.progressArray.reduce((sum, current) => sum + current, 0);
-    return Math.round((totalChunksPercent / (chunksLenght * 100)) * 100);
-  };
-
-  chunkUploadProgress = (chunkIndex, progress) => {
-    const percent = Math.round((progress.loaded / progress.total) * 100);
-    return { index: chunkIndex, percent: percent };
-  };
-  downloadFile(filePath) {
-    return this.api.post('fileDownload', { filePath: filePath }, { responseType: 'blob' });
-  }
-  async chunksRequestPool(chunkList, fileHash, handleUploadProgress) {
-    let requests = [];
-    chunkList.map((chunk) => {
-      const chunkName = `${fileHash}-${chunk.chunk.size}-${chunk.index}`;
-      const config = {
-        onUploadProgress: handleUploadProgress(chunk.index),
-      };
-      return requests.push(this.sendChunk(chunkName, chunk.chunk, config));
-    });
-    return await Promise.all(requests);
   }
   sendChunk(chunkName, chunk, config) {
     const formData = new FormData();

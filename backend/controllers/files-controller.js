@@ -4,7 +4,8 @@ const busboy = require('busboy');
 const filesService = require('../services/files-service');
 const UPLOAD_DIR = path.join(__dirname, '../uploads/root');
 const TMP_DIR = path.join(__dirname, '../tmp');
-
+const mime = require('mime');
+const contentDisposition = require('content-disposition');
 class FilesController {
   async getFiles(req, res) {
     try {
@@ -30,7 +31,6 @@ class FilesController {
       const isFileExist = fs.existsSync(checkingFilePath);
       const isChunkDirExist = fs.existsSync(chunkDirPath);
       if (isFileExist) return res.json({ exist: true });
-
       if (!isChunkDirExist) return res.json({ exist: false });
       const uploadedChunks = fs.readdirSync(chunkDirPath);
       const chunksIndex = uploadedChunks.map((chunk) => parseInt(chunk.split('-').pop()));
@@ -41,14 +41,32 @@ class FilesController {
       res.sendStatus(500);
     }
   }
+  async createDir(req, res) {
+    try {
+      const dirPath = req.body.dirPath;
+      const userId = req.session.userUuid;
+      const currentDir = path.join(UPLOAD_DIR, userId, dirPath);
+      if (fs.existsSync(currentDir))
+        return res.status(409).json({ success: false, message: 'Dir already exists' });
+      console.log(currentDir);
+      fs.mkdirSync(currentDir);
+      res.json({ success: true, message: 'dir was created successfully' });
+    } catch (error) {
+      console.error(error);
+      res.status(500);
+    }
+  }
   async downloadFile(req, res) {
     const userId = req.session.userUuid;
     const userDir = path.resolve(UPLOAD_DIR, userId);
     const filePath = req.body.filePath;
     const fileName = path.basename(filePath);
     const currentFilePath = path.join(userDir, filePath);
-    res.setHeader('Content-Disposition', `attachment;filename=${fileName}`);
-    res.pipe(fs.createWriteStream(currentFilePath));
+    const contentType = mime.getType(currentFilePath);
+    const stream = fs.createReadStream(currentFilePath);
+    res.setHeader('Content-Type', `'${contentType}'`);
+    res.setHeader('Content-Disposition', contentDisposition(fileName));
+    stream.pipe(res);
   }
   async mergeFile(req, res) {
     try {
